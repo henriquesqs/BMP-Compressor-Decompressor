@@ -2,6 +2,11 @@
 
 int main(int argc, char const *argv[])
 {
-    printf("hello");
-    return 0;
+    FILE *file;
+    BMPINFOHEADER * bmpInfo;
+    BMPFILEHEADER * bmpFile;
+
+    file = fopen("images/1000x624.bmp", "r");
+
+    if(file == NULL) printf("error");
 }
