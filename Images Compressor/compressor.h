@@ -4,8 +4,8 @@
 
 #include <math.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct BMPFILEHEADER BMPFILEHEADER; // BMP file header structure
 typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
@@ -25,18 +25,20 @@ void readHeader(FILE *F, BMPFILEHEADER *H);
 //  - width: image's width.
 //
 // RETURN: 1 (true) if image is valid and 0 (false) otherwise.
-bool validateImage(int height, int width);
+bool validateImage(int height, int width, short type);
 
 // Function to read the file header and store in the struct.
 //
 // PARAMETERS:
-//  - file: pointer to a image file;
-//  - fileHeader: pointer to struct that will save the file header.
+//  - file: pointer to an image file;
+//  - fileHeader: pointer to struct that will save the image header.
 void readBMPFileHeader(FILE *file, BMPFILEHEADER *fileHeader);
 
 // Function to read the fil information header and store in the struct.
 //
 // PARAMETERS
+//  - file: pointer to an image file;
+//  - infoHeader: pointer to a struct that will save the image information.
 void readBMPInfoHeader(FILE *file, BMPINFOHEADER *infoHeader);
 
 #endif

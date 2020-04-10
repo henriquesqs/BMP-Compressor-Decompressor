@@ -25,44 +25,37 @@ typedef struct BMPINFOHEADER {
     unsigned int biClrImportant; /* Number of important colors */
 } BMPINFOHEADER;
 
-void readHeader(FILE *F, BMPFILEHEADER *H) {
+bool validateImage(int height, int width, short type) {
 
-    fread(&H->bfType, sizeof(unsigned short int), 1, F);
-    fread(&H->bfSize, sizeof(unsigned int), 1, F);
-    fread(&H->bfReserved1, sizeof(unsigned short int), 1, F);
-    fread(&H->bfReserved2, sizeof(unsigned short int), 1, F);
-    fread(&H->bfOffBits, sizeof(unsigned int), 1, F);
-}
-
-bool validateImage(int height, int width){
     //if(height > 1280 || height < 8 || width > 800 || width < 8)
     //    return false; // image is not valid
-    // return true;
-    return (height > 1280 || height < 8 || width > 800 || width < 8) ? 1 : 0;
+    //if (type != 0x4D42) 
+    //    return 0; // its not a bmp file
+    //return true;
+
+    return (height > 1280 || height < 8 || width > 800 || width < 8 || type != 0x4D42) ? 0 : 1;
 }
 
-void readBMPFileHeader(FILE* file, BMPFILEHEADER *fileHeader){
+void readBMPFileHeader(FILE *file, BMPFILEHEADER *FH) {
 
-    fileHeader->bfType = fread(&buffer, 2, 1, file);
-    fileHeader->bfSize = fread(&buffer, 4, 1, file);
-    fileHeader->bfReserved1 = fread(&buffer, 2, 1, file);
-    fileHeader->bfReserved2 = fread(&buffer, 2, 1, file);
-    fileHeader->bfOffBits = fread(&buffer, 4, 1, file);
-
+    fread(&FH->bfType, sizeof(unsigned short), 1, file);
+    fread(&FH->bfSize, sizeof(unsigned int), 1, file);
+    fread(&FH->bfReserved1, sizeof(unsigned short), 1, file);
+    fread(&FH->bfReserved2, sizeof(unsigned short), 1, file);
+    fread(&FH->bfOffBits, sizeof(unsigned int), 1, file);
 }
 
-void readBMPInfoHeader(FILE* file, BMPINFOHEADER *infoHeader){
+void readBMPInfoHeader(FILE *file, BMPINFOHEADER *IH) {
 
-    infoHeader->biSize = fread(&buffer, 4, 1, file);
-    infoHeader->biWidth = fread(&buffer, 4, 1, file);
-    infoHeader->biHeight = fread(&buffer, 4, 1, file);
-    infoHeader->biPlanes = fread(&buffer, 2, 1, file);
-    infoHeader->biBitCount = fread(&buffer, 2, 1, file);
-    infoHeader->biCompression = fread(&buffer, 4, 1, file);
-    infoHeader->biSizeImage = fread(&buffer, 4, 1, file);
-    infoHeader->biXPelsPerMeter = fread(&buffer, 4, 1, file);
-    infoHeader->biYPelsPerMeter = fread(&buffer, 4, 1, file);
-    infoHeader->biClrUsed = fread(&buffer, 4, 1, file);
-    infoHeader->biClrImportant = fread(&buffer, 4, 1, file);
-
+    fread(&IH->biSize, sizeof(unsigned int), 1, file);
+    fread(&IH->biWidth, sizeof(int), 1, file);
+    fread(&IH->biHeight, sizeof(int), 1, file);
+    fread(&IH->biPlanes, sizeof(unsigned short), 1, file);
+    fread(&IH->biBitCount, sizeof(unsigned short), 1, file);
+    fread(&IH->biCompression, sizeof(unsigned int), 1, file);
+    fread(&IH->biSizeImage, sizeof(unsigned int), 1, file);
+    fread(&IH->biXPelsPerMeter, sizeof(int), 1, file);
+    fread(&IH->biYPelsPerMeter, sizeof(int), 1, file);
+    fread(&IH->biClrUsed, sizeof(unsigned int), 1, file);
+    fread(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 }
