@@ -46,6 +46,20 @@ int main(int argc, char const *argv[]) {
         printf("current location %ld and file's final location %ld", location, size);
     }
 
+    char **R, **G, **B; // We're going to split the RGB channels into these 3 matrices.
+    unsigned int dataSize = imageDataSize(bmpInfo); // Gets the size of image data.
+    
+    R = G = B = (char**) malloc(dataSize * sizeof(char*));
+
+    for (int i = 0; i < dataSize; i++) {
+        R[i] = (char*) malloc(sizeof(char));
+        G[i] = (char*) malloc(sizeof(char));
+        B[i] = (char*) malloc(sizeof(char));
+    }
+
+    // Separates the bitmap data into its RGB components
+    separateComponents(bmpImage, bmpInfo, R, G, B);
+
     // Free allocated memory
     free(bmpFile);
     free(bmpInfo);

@@ -33,6 +33,14 @@ bool validateImage(int height, int width) {
     return (height > 1280 || height < 8 || width > 800 || width < 8) ? ERROR : SUCCESS;
 }
 
+unsigned int imageDataSize(BMPINFOHEADER *infoHeader) {
+    return infoHeader->biSizeImage;
+}
+
+int imageSize(BMPINFOHEADER *infoHeader){
+    return (infoHeader->biHeight * infoHeader->biWidth);
+}
+
 bool readBMPFileHeader(FILE *file, BMPFILEHEADER *FH) {
 
     fread(&FH->bfType, sizeof(unsigned short), 1, file);
@@ -63,7 +71,7 @@ bool readBMPInfoHeader(FILE *file, BMPINFOHEADER *IH) {
     fread(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 
     if (!validateImage(IH->biHeight, IH->biWidth)) {
-        printf("Image isnt valid\n");
+        printf("Image isnt valid. Height or Width is incorrect\n");
         return ERROR;
     }
 
@@ -107,4 +115,18 @@ char* readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader) {
     }
 
     return bmpImage;
+}
+
+void separateComponents(char* bmpImage, BMPINFOHEADER *infoHeader, char** R, char** G, char** B){
+
+    // As the RGB image is 24-bit, each channel has 8 bits (for red, green and blue).
+    // One pixel contains 24 bits.
+    
+    for (int i = 0; i < infoHeader->biHeight; i++) {
+        for (int j = 0; j < infoHeader->biWidth; j++) {
+            R[i][j] = bmpImage[i] << 1;
+            G[i][j] = bmpImage[i] << 1;
+            B[i][j] = bmpImage[i] << 1;
+        }
+    }
 }
