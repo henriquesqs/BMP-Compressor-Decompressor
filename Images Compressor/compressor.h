@@ -1,21 +1,17 @@
 #ifndef COMPRESSOR_H
 #define COMPRESSOR_H
+#define DEBUG 0
 #define MAX 500
+#define SUCCESS 1
+#define ERROR -999999
 
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 typedef struct BMPFILEHEADER BMPFILEHEADER; // BMP file header structure
 typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
-
-// Function to read an image header.
-//
-// PARAMETERS:
-//  - F: bitmap file that must be read from disk;
-//  - H: struct containing header informations.
-void readHeader(FILE *F, BMPFILEHEADER *H);
 
 // Function to verify if the image is according to project's specification
 // A valid image is at least 8x8 px and no greater than 1280x800 px.
@@ -24,21 +20,42 @@ void readHeader(FILE *F, BMPFILEHEADER *H);
 //  - height: image's height;
 //  - width: image's width.
 //
-// RETURN: 1 (true) if image is valid and 0 (false) otherwise.
-bool validateImage(int height, int width, short type);
+// RETURN: SUCCESS if image is valid and ERROR otherwise.
+bool validateImage(int height, int width);
 
 // Function to read the file header and store in the struct.
 //
 // PARAMETERS:
-//  - file: pointer to an image file;
+//  - file: pointer to an  bitmap image file;
 //  - fileHeader: pointer to struct that will save the image header.
-void readBMPFileHeader(FILE *file, BMPFILEHEADER *fileHeader);
-
-// Function to read the fil information header and store in the struct.
 //
-// PARAMETERS
+// RETURNS SUCESS if everything went right. ERROR otherwise.
+bool readBMPFileHeader(FILE *file, BMPFILEHEADER *fileHeader);
+
+// Function to read the file information header and store in the struct.
+//
+// PARAMETERS:
 //  - file: pointer to an image file;
 //  - infoHeader: pointer to a struct that will save the image information.
-void readBMPInfoHeader(FILE *file, BMPINFOHEADER *infoHeader);
+//
+// RETURNS SUCESS if everything went right. ERROR otherwise.
+bool readBMPInfoHeader(FILE *file, BMPINFOHEADER *infoHeader);
+
+// Function to move to bitmap image data given a File header and its bfOffBits.
+//
+// PARAMETERS:
+//  - file: pointer to an image file;
+//  - FH: pointer to a struct that stores the file header.
+void moveToBitmapData(FILE *file, BMPFILEHEADER *FH);
+
+// Function to read the image data from a file pointer.
+//
+// PARAMETERS:
+//  - file: pointer to a bitmap image file;
+//  - bmpImage: variable to store image data;
+//  - infoHeader: struct with image header informations.
+//
+// RETURNS SUCESS if everything went right. ERROR otherwise.
+char* readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader);
 
 #endif
