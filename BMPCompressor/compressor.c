@@ -6,7 +6,6 @@ int main(int argc, char const *argv[]) {
     FILE *file = NULL;
     unsigned char *bmpImage;
 
-
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
 
