@@ -1,7 +1,5 @@
 #include "compressor.h"
 
-int buffer[MAX];
-
 typedef struct BMPFILEHEADER {
     unsigned short bfType;      /* Magic number for file */
     unsigned int bfSize;        /* Size of file */
