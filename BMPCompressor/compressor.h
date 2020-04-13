@@ -66,18 +66,30 @@ void moveToBitmapData(FILE *file, BMPFILEHEADER *FH);
 
     RETURNS SUCESS if everything went right. ERROR otherwise.
 */
-char* readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader);
+void readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, unsigned char **G, unsigned char **B);
 
 /*
-    Function to separate each channel (RGB) of a BMP file into matrices (R, G and B).
+    Function responsible to alloc the R, G and B matrices.
 
     PARAMETERS:
-        - bmpImage: pointer to the image data;
-        - infoHeader: struct with image header informations;
-        - R, G, B: matrices to storage each channel bits.
-
+        - infoHeader: struct with the necessary data to alloc the matrices;
+        - R: matrix to alloc the R component;
+        - G: matrix to alloc the G component;
+        - B: matrix to alloc the B component.
 */
-void separateComponents(char *bmpImage, BMPINFOHEADER *infoHeader, char** R, char** G, char** B);
+void allocMatrices(unsigned char **R, unsigned char **G, unsigned char **B, BMPINFOHEADER *infoHeader);
+
+/*
+    Function responsible to separate the R, G, B componentes.
+
+    PARAMETERS:
+        - file: pointer to the image file.
+        - infoHeader: struct with the necessary data to alloc the matrices;
+        - R: matrix to alloc the R component;
+        - G: matrix to alloc the G component;
+        - B: matrix to alloc the B component.
+*/
+void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, unsigned char **G, unsigned char **B);
 
 /*
     Function to calculate and return image data size.
@@ -87,7 +99,7 @@ void separateComponents(char *bmpImage, BMPINFOHEADER *infoHeader, char** R, cha
     
     RETURNS the size of the data of the image.
 */
-unsigned int imageDataSize(BMPINFOHEADER * infoHeader);
+unsigned int imageDataSize(BMPINFOHEADER *infoHeader);
 
 /*
     Function to calculate and return image size.

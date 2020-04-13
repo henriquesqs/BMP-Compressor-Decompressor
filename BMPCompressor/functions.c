@@ -82,56 +82,31 @@ void moveToBitmapData(FILE *file, BMPFILEHEADER *FH) {
     fseek(file, FH->bfOffBits, SEEK_SET);
 }
 
-char* readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader) {
+void allocMatrices(unsigned char **R, unsigned char **G, unsigned char **B, BMPINFOHEADER *infoHeader){
 
-    // Allocating enough memory to read the bitmap image data.
-    char *bmpImage = (unsigned char *) malloc(infoHeader->biSizeImage);
+    R = G = B = malloc(infoHeader->biHeight);
 
-    // Checking errors on allocation
-    if (!bmpImage) {
-        printf("Error allocation memory to bmpImage");
-        return NULL;
-    }
+    for(int i = 0; i < infoHeader->biSize; i++)
+        R[i] = G[i] = B[i] = malloc(infoHeader->biWidth);
 
-    // Reads bitmap image data
-    fread(bmpImage, infoHeader->biSizeImage, 1, file);
-
-    // Checking errors
-    if (bmpImage == NULL){
-        printf("Error reading image data");
-        return NULL;
-    }
-
-
-    // WARNING: WE DONT NEED TO DO THIS BELOW!
-
-    // As the BMP image is BGR, now we're going to swap the R and B in order
-    // to get a RGB using  a auxiliar variable to do so.
-    // The iteration is 3 by 3 because we're dealing with 3 bytes (R+G+B).
-
-    unsigned char aux;
-
-    for (int i = 0; i < infoHeader->biSizeImage; i += 3) {
-        aux = bmpImage[i];
-        bmpImage[i] = bmpImage[i+2];
-        bmpImage[i+2] = aux;
-    }
-
-    // WARNING: WE DONT NEED TO DO THIS BELOW!
-
-    return bmpImage;
 }
 
-void separateComponents(char* bmpImage, BMPINFOHEADER *infoHeader, char** R, char** G, char** B){
+void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, unsigned char **G, unsigned char **B) {
 
+    // NOTE FOR ME: 
     // As the RGB image is 24-bit, each channel has 8 bits (for red, green and blue).
     // One pixel contains 24 bits.
-    
-    for (int i = 0; i < infoHeader->biHeight; i++) {
-        for (int j = 0; j < infoHeader->biWidth; j++) {
-            R[i][j] = bmpImage[i] << 1;
-            G[i][j] = bmpImage[i] << 1;
-            B[i][j] = bmpImage[i] << 1;
+
+    for(int i = 0; i < infoHeader->biHeight; i++){
+        for(int j = 0; j < infoHeader->biWidth; j++){
+            fread(B[i][j], 1, 1, file);
+            fread(G[i][j], 1, 1, file);
+            fread(R[i][j], 1, 1, file);
+
+            // B[i][j] = fgetc(file);
+            // G[i][j] = fgetc(file);
+            // R[i][j] = fgetc(file);
         }
     }
+
 }
