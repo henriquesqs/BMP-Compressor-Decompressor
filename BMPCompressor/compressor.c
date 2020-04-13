@@ -29,43 +29,28 @@ int main(int argc, char const *argv[]) {
     // Moving our file pointer to the bitmap data region.
     moveToBitmapData(file, bmpFile);
 
-    // Reading the bitmap image data and the return of this function stores it in bmpImage.
-    bmpImage = readBitMapImage(file, bmpInfo);
-    
-    // Checking for erros on above read
-    if(bmpImage == NULL){
-        printf("Error reading image data");
-        free(bmpFile);
-        free(bmpInfo);
-        return ERROR;
-    }
+    unsigned char **R = NULL, **G = NULL, **B = NULL; // We're going to split the RGB channels into these 3 matrices.
+
+    R = allocMatrix(R, bmpInfo);
+    G = allocMatrix(G, bmpInfo);
+    B = allocMatrix(B, bmpInfo);
+
+    // Separates the bitmap data into its RGB components.
+    // separateComponents(file, bmpInfo, R, G, B);
 
     if (DEBUG) {
         long location = ftell(file);
         printf("current location %ld and file's final location %ld", location, size);
     }
 
-    unsigned char **R, **G, **B; // We're going to split the RGB channels into these 3 matrices.
-    unsigned int dataSize = imageDataSize(bmpInfo); // Gets the size of image data.
-    
-    // R = G = B = (char**) malloc(dataSize * sizeof(char*));
-
-    // for (int i = 0; i < dataSize; i++) {
-    //     R[i] = (char*) malloc(sizeof(char));
-    //     G[i] = (char*) malloc(sizeof(char));
-    //     B[i] = (char*) malloc(sizeof(char));
-    // }
-
-    // allocMatrices(R, G, B, bmpInfo);
-
-    // Separates the bitmap data into its RGB components
-    separateComponents(bmpImage, bmpInfo, R, G, B);
-
-    // Free allocated memory
+    // // Free allocated memory
+    fclose(file);
     free(bmpFile);
     free(bmpInfo);
     free(bmpImage);
-    fclose(file);
+    freeMatrix(R, bmpInfo);
+    freeMatrix(G, bmpInfo);
+    freeMatrix(B, bmpInfo);
 
     return SUCCESS;
 }

@@ -37,7 +37,7 @@ unsigned int imageDataSize(BMPINFOHEADER *infoHeader) {
     return infoHeader->biSizeImage;
 }
 
-int imageSize(BMPINFOHEADER *infoHeader){
+int imageSize(BMPINFOHEADER *infoHeader) {
     return (infoHeader->biHeight * infoHeader->biWidth);
 }
 
@@ -82,31 +82,35 @@ void moveToBitmapData(FILE *file, BMPFILEHEADER *FH) {
     fseek(file, FH->bfOffBits, SEEK_SET);
 }
 
-void allocMatrices(unsigned char **R, unsigned char **G, unsigned char **B, BMPINFOHEADER *infoHeader){
+unsigned char **allocMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader) {
 
-    R = G = B = malloc(infoHeader->biHeight);
+    mat = malloc(infoHeader->biHeight);
 
-    for(int i = 0; i < infoHeader->biSize; i++)
-        R[i] = G[i] = B[i] = malloc(infoHeader->biWidth);
+    for (int i = 0; i < infoHeader->biHeight; i++)
+        mat[i] = malloc(infoHeader->biWidth);
 
+    return mat;
+}
+
+void freeMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader){
+    
+    for (int i = 0; i < infoHeader->biHeight; i++)
+        free(mat[i]);
+
+    free(mat);
 }
 
 void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, unsigned char **G, unsigned char **B) {
 
-    // NOTE FOR ME: 
-    // As the RGB image is 24-bit, each channel has 8 bits (for red, green and blue).
-    // One pixel contains 24 bits.
+    for (int i = 0; i < infoHeader->biHeight; i++) {
+        for (int j = 0; j < infoHeader->biWidth; j++) {
+            // fread(&B[i][j], 1, 1, file);
+            // fread(&G[i][j], 1, 1, file);
+            // fread(&R[i][j], 1, 1, file);
 
-    for(int i = 0; i < infoHeader->biHeight; i++){
-        for(int j = 0; j < infoHeader->biWidth; j++){
-            fread(B[i][j], 1, 1, file);
-            fread(G[i][j], 1, 1, file);
-            fread(R[i][j], 1, 1, file);
-
-            // B[i][j] = fgetc(file);
-            // G[i][j] = fgetc(file);
-            // R[i][j] = fgetc(file);
+            B[i][j] = fgetc(file);
+            G[i][j] = fgetc(file);
+            R[i][j] = fgetc(file);
         }
     }
-
 }

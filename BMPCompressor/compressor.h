@@ -73,11 +73,18 @@ void readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, u
 
     PARAMETERS:
         - infoHeader: struct with the necessary data to alloc the matrices;
-        - R: matrix to alloc the R component;
-        - G: matrix to alloc the G component;
-        - B: matrix to alloc the B component.
+        - mat: matrix to alloc;
 */
-void allocMatrices(unsigned char **R, unsigned char **G, unsigned char **B, BMPINFOHEADER *infoHeader);
+unsigned char **allocMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader);
+
+/*
+    Function to free a matrix, given an info header.
+
+    PARAMETERS:
+        - mat: matrix to free;
+        - infoHeader: struct containg some necessary info to do so.
+*/
+void freeMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader);
 
 /*
     Function responsible to separate the R, G, B componentes.
