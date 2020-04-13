@@ -80,6 +80,16 @@ char* readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader);
 void separateComponents(char *bmpImage, BMPINFOHEADER *infoHeader, char** R, char** G, char** B);
 
 /*
+    Function to calculate and return image data size.
+
+    PARAMETERS:
+        - infoHeader: struct with image header informations;
+    
+    RETURNS the size of the data of the image.
+*/
+unsigned int imageDataSize(BMPINFOHEADER * infoHeader);
+
+/*
     Function to calculate and return image size.
 
     PARAMETERS:
@@ -87,9 +97,6 @@ void separateComponents(char *bmpImage, BMPINFOHEADER *infoHeader, char** R, cha
     
     RETURNS the size (width x height) of the image.
 */
-
-unsigned int imageDataSize(BMPINFOHEADER * infoHeader);
-
 int imageSize(BMPINFOHEADER *infoHeader);
 
 #endif
