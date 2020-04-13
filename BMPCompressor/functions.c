@@ -102,8 +102,11 @@ char* readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader) {
         return NULL;
     }
 
-    // As the BMP image is BGR, now we're going to swap the R and B in order to get a RGB using 
-    // a auxiliar variable to do so.
+
+    // WARNING: WE DONT NEED TO DO THIS BELOW!
+
+    // As the BMP image is BGR, now we're going to swap the R and B in order
+    // to get a RGB using  a auxiliar variable to do so.
     // The iteration is 3 by 3 because we're dealing with 3 bytes (R+G+B).
 
     unsigned char aux;
@@ -113,6 +116,8 @@ char* readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader) {
         bmpImage[i] = bmpImage[i+2];
         bmpImage[i+2] = aux;
     }
+
+    // WARNING: WE DONT NEED TO DO THIS BELOW!
 
     return bmpImage;
 }

@@ -6,8 +6,8 @@ int main(int argc, char const *argv[]) {
     FILE *file = NULL;
     unsigned char *bmpImage;
 
-    BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
-    BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
+    BMPFILEHEADER *bmpFile = (BMPFILEHEADER *) malloc(14);
+    BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *) malloc(40);
 
     file = fopen("images/1000x624.bmp", "rb"); // Openning the image that we want to compress.
 
