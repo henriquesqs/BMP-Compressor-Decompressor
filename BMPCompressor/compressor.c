@@ -9,7 +9,7 @@ int main(int argc, char const *argv[]) {
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
 
-    file = fopen("images/1000x624.bmp", "rb"); // Openning the image that we want to compress.
+    file = fopen("images/8x8.bmp", "rb"); // Openning the image that we want to compress.
 
     if (file == NULL) { // Checking if there was an error opening the image.
         printf("error reading file");
