@@ -4,6 +4,7 @@
 #define MAX 500
 #define SUCCESS 1
 #define ERROR -999999
+#define PI 3.14159265358979323846
 
 #include <math.h>
 #include <stdbool.h>
@@ -74,6 +75,8 @@ void readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, u
     PARAMETERS:
         - infoHeader: struct with the necessary data to alloc the matrices;
         - mat: matrix to alloc;
+    
+    RETURNS allocated matrix.
 */
 unsigned char **allocMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader);
 
@@ -117,5 +120,9 @@ unsigned int imageDataSize(BMPINFOHEADER *infoHeader);
     RETURNS the size (width x height) of the image.
 */
 int imageSize(BMPINFOHEADER *infoHeader);
+
+void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFOHEADER *infoHeader);
+
+void dct(unsigned char **dctCoefs, unsigned char **mat);
 
 #endif

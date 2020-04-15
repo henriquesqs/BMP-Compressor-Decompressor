@@ -4,10 +4,10 @@ int main(int argc, char const *argv[]) {
 
     long size = 0;
     FILE *file = NULL;
-    unsigned char *bmpImage = NULL;
+    unsigned char *bmpImage = NULL, **dctCoefs = NULL;
 
-    BMPFILEHEADER *bmpFile = (BMPFILEHEADER *) malloc(14);
-    BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *) malloc(40);
+    BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
+    BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
 
     file = fopen("images/1000x624.bmp", "rb"); // Openning the image that we want to compress.
 
@@ -31,7 +31,7 @@ int main(int argc, char const *argv[]) {
 
     unsigned char **R = NULL, **G = NULL, **B = NULL; // We're going to split the RGB channels into these 3 matrices.
 
-    // Allocating enough memory to do so
+    // Allocating enough memory to allocate the channels.
     R = allocMatrix(R, bmpInfo);
     G = allocMatrix(G, bmpInfo);
     B = allocMatrix(B, bmpInfo);
@@ -44,7 +44,14 @@ int main(int argc, char const *argv[]) {
         printf("current location %ld and file's final location %ld\n", location, size);
     }
 
-    // // Free allocated memory
+    // Dividing each component into 8x8 matrices in order to use DCT (Discrete cosine transform) algorithm,
+    // due to some researchs proving that this division increases the efficiency of DCT.
+    dctCoefs = allocMatrix(dctCoefs, bmpInfo);
+    divideMatrices(R, dctCoefs, bmpInfo);
+    divideMatrices(G, dctCoefs, bmpInfo);
+    divideMatrices(B, dctCoefs, bmpInfo);
+
+    // // Free allocated memory.
     fclose(file);
     free(bmpFile);
     free(bmpInfo);
@@ -52,6 +59,7 @@ int main(int argc, char const *argv[]) {
     freeMatrix(R, bmpInfo);
     freeMatrix(G, bmpInfo);
     freeMatrix(B, bmpInfo);
+    freeMatrix(dctCoefs, bmpInfo);
 
     return SUCCESS;
 }
