@@ -2,7 +2,7 @@ Encoder ========
 
 -> Preparação
 
-(*) 1a Etapa: separar a imagem em componentes RGB - 3 matrizes, uma pra R, outra p G, outra p B - (preencher a struct); 
+DONE (*) 1a Etapa: separar a imagem em componentes RGB - 3 matrizes, uma pra R, outra p G, outra p B - (preencher a struct); 
 	cada matriz tem dados entre 0 - 255;
 
 (*) 2a Etapa: preparação de blocos, que facilita a DCT (divide cada uma das componentes - matrizes contendo o R, G e B - em bloquinhos de 8x8 pixels);
