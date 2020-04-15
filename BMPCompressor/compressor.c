@@ -4,7 +4,7 @@ int main(int argc, char const *argv[]) {
 
     long size = 0;
     FILE *file = NULL;
-    unsigned char *bmpImage;
+    unsigned char *bmpImage = NULL;
 
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *) malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *) malloc(40);
@@ -31,16 +31,17 @@ int main(int argc, char const *argv[]) {
 
     unsigned char **R = NULL, **G = NULL, **B = NULL; // We're going to split the RGB channels into these 3 matrices.
 
+    // Allocating enough memory to do so
     R = allocMatrix(R, bmpInfo);
     G = allocMatrix(G, bmpInfo);
     B = allocMatrix(B, bmpInfo);
 
     // Separates the bitmap data into its RGB components.
-    // separateComponents(file, bmpInfo, R, G, B);
+    separateComponents(file, bmpInfo, R, G, B);
 
     if (DEBUG) {
         long location = ftell(file);
-        printf("current location %ld and file's final location %ld", location, size);
+        printf("current location %ld and file's final location %ld\n", location, size);
     }
 
     // // Free allocated memory

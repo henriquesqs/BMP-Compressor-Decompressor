@@ -1,6 +1,6 @@
 #ifndef COMPRESSOR_H
 #define COMPRESSOR_H
-#define DEBUG 0
+#define DEBUG 1
 #define MAX 500
 #define SUCCESS 1
 #define ERROR -999999

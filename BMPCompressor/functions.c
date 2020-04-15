@@ -71,7 +71,7 @@ bool readBMPInfoHeader(FILE *file, BMPINFOHEADER *IH) {
     fread(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 
     if (!validateImage(IH->biHeight, IH->biWidth)) {
-        printf("Image isnt valid. Height or Width is incorrect\n");
+        printf("Image isnt valid. Height or Width is incorrect.\n");
         return ERROR;
     }
 
@@ -84,10 +84,10 @@ void moveToBitmapData(FILE *file, BMPFILEHEADER *FH) {
 
 unsigned char **allocMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader) {
 
-    mat = malloc(infoHeader->biHeight);
+    mat = malloc(infoHeader->biHeight * sizeof(char*));
 
     for (int i = 0; i < infoHeader->biHeight; i++)
-        mat[i] = malloc(infoHeader->biWidth);
+        mat[i] = malloc(infoHeader->biWidth * sizeof(char));
 
     return mat;
 }
@@ -96,18 +96,14 @@ void freeMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader){
     
     for (int i = 0; i < infoHeader->biHeight; i++)
         free(mat[i]);
-
+    
     free(mat);
 }
 
 void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, unsigned char **G, unsigned char **B) {
-
+    
     for (int i = 0; i < infoHeader->biHeight; i++) {
         for (int j = 0; j < infoHeader->biWidth; j++) {
-            // fread(&B[i][j], 1, 1, file);
-            // fread(&G[i][j], 1, 1, file);
-            // fread(&R[i][j], 1, 1, file);
-
             B[i][j] = fgetc(file);
             G[i][j] = fgetc(file);
             R[i][j] = fgetc(file);
