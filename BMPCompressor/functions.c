@@ -150,6 +150,19 @@ void dct(unsigned char **dctCoefs, unsigned char **mat) {
     }
 }
 
+void levelShift(unsigned char **dctCoefs, int offBits) {
+
+    for (int i = 0; i < 8; i++)
+        for (int j = 0; j < 8; j++)
+            dctCoefs[i][j] -= offBits;
+
+    // for (int i = 0; i < 8; i++) {
+    //     for (int j = 0; j < 8; j++)
+    //         printf("%d, ", dctCoefs[i][j]);
+    //     printf("\n");
+    // }
+}
+
 void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFOHEADER *infoHeader) {
 
     unsigned char **mat = NULL;
@@ -167,7 +180,7 @@ void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFO
                     // We are just copying the 8x8 part of component matrix and applying
                     // level shift below, which is said to increase the performance of DCT.
 
-                    mat[k][l] = component[i * 8 + k][j * 8 + l] - 128;
+                    mat[k][l] = component[i * 8 + k][j * 8 + l];
                 }
             }
             dct(dctCoefs, mat);
@@ -209,17 +222,15 @@ int16_t cos1(int16_t angle) {
 
 void quantization(unsigned char **quantCoefs, unsigned char **dctCoefs) {
 
-    for (int i = 0; i < 8; i++) 
+    for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
             quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
-        
-    
-    
-    // printf("quantizados\n");
-    // for (int i = 0; i < 8; i++) {
-    //     for (int j = 0; j < 8; j++){
-    //         printf("%d, ", quantCoefs[i][j]);
-    //     }
-    //     printf("\n");
-    // }
+
+    printf("quantizados\n");
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++){
+            printf("%d, ", quantCoefs[i][j]);
+        }
+        printf("\n");
+    }
 }

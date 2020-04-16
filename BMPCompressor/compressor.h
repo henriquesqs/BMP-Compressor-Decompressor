@@ -208,6 +208,10 @@ void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFO
 void dct(unsigned char **dctCoefs, unsigned char **mat);
 
 /*
+*/
+void levelShift(unsigned char **dctCoefs, int offBits);
+
+/*
     Fast sin function get from:
     https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
 */
@@ -224,10 +228,15 @@ int16_t cos1(int16_t angle);
     (dctCoefs) by luminance table - a global static matrix.
 
     PARAMETERS:
+        - quantCoefs: matrix to store quantized coefficients;
         - dctCoefs: matrix with dct coefficients.
 
-    RETURNS a matrix with quantization coefficients.
 */
 void quantization(unsigned char **quantCoefs, unsigned char **dctCoefs);
+
+/*
+    This function is responsible to apply vectorization on
+*/
+void vectorization(unsigned char **quantCoefs, unsigned char vector[]);
 
 #endif

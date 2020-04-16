@@ -53,6 +53,9 @@ int main(int argc, char const *argv[]) {
     divideMatrices(G, dctCoefs, bmpInfo);
     divideMatrices(B, dctCoefs, bmpInfo);
 
+    // Applying level shifting
+    levelShift(dctCoefs, 128);
+
     // Starting the quantization step. Here we're going to divide our DCT coefficients by
     // the quantization matrix in order to perform coefficients quantization.
 
@@ -60,8 +63,10 @@ int main(int argc, char const *argv[]) {
 
     quantization(quantCoefs, dctCoefs);
 
-    // On this step, we're going to apply vetorization. We do this to make easier for us
-    // to compress the image by moving all the zero values to the end of the vector.
+    // On this step, we're going to apply vectorization using zig-zag scan. We do this to
+    // make easier for us to compress the image by moving all the zero values to the end of the vector.
+    
+    unsigned char vector[64];
 
     // // Free allocated memory.
     fclose(file);
