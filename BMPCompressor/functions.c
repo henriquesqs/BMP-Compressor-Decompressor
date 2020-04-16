@@ -115,7 +115,7 @@ void dct(unsigned char **dctCoefs, unsigned char **mat) {
    
     /*  
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        FOR GOD SAKES WE NEED TO OPTIMIZE THIS PART OF THE CODE
+        FOR GOD's SAKE WE NEED TO OPTIMIZE THIS PART OF THE CODE
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     */
 
@@ -151,7 +151,9 @@ void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFO
         for (int j = 0; j < infoHeader->biWidth / 8; j++) {
             for (int k = 0; k < 8; k++) {
                 for (int l = 0; l < 8; l++) {
-                    mat[k][l] = component[i * 8 + k][j * 8 + l];
+                    // We are just copying the 8x8 part of component matrix and applying
+                    // level shift below, which is said to increase the performance of DCT.
+                    mat[k][l] = component[i * 8 + k][j * 8 + l] - 128;
                     dct(dctCoefs, mat);
                 }
             }
