@@ -68,8 +68,8 @@ int main(int argc, char const *argv[]) {
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));
-    freeMatrix(dctCoefs, getHeight(bmpInfo));
-    freeMatrix(quantCoefs, getHeight(bmpInfo));
+    freeMatrix(dctCoefs, 8);
+    freeMatrix(quantCoefs, 8);
 
     return SUCCESS;
 }
