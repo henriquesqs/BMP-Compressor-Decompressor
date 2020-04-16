@@ -170,7 +170,7 @@ void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFO
 
                     // We are just copying the 8x8 part of component matrix and applying
                     // level shift below, which is said to increase the performance of DCT.
-                    
+
                     mat[k][l] = component[i * 8 + k][j * 8 + l] - 128;
                     dct(dctCoefs, mat);
                 }
@@ -215,5 +215,5 @@ void quantization(unsigned char **quantCoefs, unsigned char **dctCoefs) {
 
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
-            quantCoefs[i][j] = dctCoefs[i][j] / luminanceTable[i][j];
+            quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
 }

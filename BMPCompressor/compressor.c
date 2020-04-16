@@ -44,7 +44,7 @@ int main(int argc, char const *argv[]) {
         printf("current location %ld and file's final location %ld\n", location, size);
     }
 
-    // Dividing each component into 8x8 matrices in order to use DCT (Discrete cosine transform) algorithm,
+    // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
     // due to some researchs proving that this division increases the efficiency of DCT.
 
     unsigned char **dctCoefs = allocMatrix(dctCoefs, 8, 8);
