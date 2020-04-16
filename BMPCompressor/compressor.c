@@ -51,6 +51,10 @@ int main(int argc, char const *argv[]) {
     divideMatrices(G, dctCoefs, bmpInfo);
     divideMatrices(B, dctCoefs, bmpInfo);
 
+    // Starting the quantization step. Here we're going to divide our DCT coefficients by
+    // the quantization matrix in order to perform coefficients quantization.
+    dctCoefs = quantization(dctCoefs);
+
     // // Free allocated memory.
     fclose(file);
     free(bmpFile);

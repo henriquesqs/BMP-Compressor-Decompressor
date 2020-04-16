@@ -1,10 +1,15 @@
 #ifndef COMPRESSOR_H
 #define COMPRESSOR_H
+
 #define DEBUG 0
 #define MAX 500
 #define SUCCESS 1
 #define ERROR -999999
 #define PI 3.14159265358979323846
+
+// Some defines to use in the (fast) sin1 cos1 functions
+// special thanks to stfwi, writer of the article below
+// https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
 
 #define INT16_BITS (8 * sizeof(int16_t))
 #ifndef INT16_MAX
@@ -21,6 +26,7 @@
 #define NEGATE_BIT (1 << (TABLE_BITS + 1))
 #define INTERP_BITS (INT16_BITS - 1 - LOOKUP_BITS)
 #define INTERP_MASK ((1 << INTERP_BITS) - 1)
+// -----------------------------------------------------
 
 #include <math.h>
 #include <stdbool.h>
@@ -34,6 +40,16 @@ static int16_t sin90[TABLE_SIZE + 1] = {
     0x5a81, 0x5ed6, 0x62f1, 0x66ce, 0x6a6c, 0x6dc9, 0x70e1, 0x73b5,
     0x7640, 0x7883, 0x7a7c, 0x7c29, 0x7d89, 0x7e9c, 0x7f61, 0x7fd7,
     0x7fff};
+
+static int luminanceTable[8][8] = {
+    16,11,10,16,24,40,51,61,
+    12,12,14,19,26,58,60,55,
+    14,13,16,24,40,57,69,56,
+    14,17,22,29,51,87,80,62,
+    18,22,37,56,68,109,103,77,
+    24,35,55,64,81,104,113,92,
+    49,64,78,87,103,121,120,101,
+    72,92,95,98,112,100,103,99};
 
 typedef struct BMPFILEHEADER BMPFILEHEADER; // BMP file header structure
 typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
@@ -152,5 +168,7 @@ void dct(unsigned char **dctCoefs, unsigned char **mat);
 int16_t sin1(int16_t angle);
 
 int16_t cos1(int16_t angle);
+
+unsigned char **quantization(unsigned char **dctCoefs);
 
 #endif

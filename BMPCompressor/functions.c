@@ -125,17 +125,17 @@ void dct(unsigned char **dctCoefs, unsigned char **mat) {
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-            
+
             dctCoefs[i][j] = 0;
-            
+
             if (i == 0 && j == 0)
                 c1 = c2 = 1 / sqrt(2);
 
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
 
-                    // Thanks to the writer (@author stfwi) of this page below we found
-                    // a fast cosine and sin functions to use here which uses a LUT:
+                    // Thanks to the writer (@author stfwi) of this page no the link below, we found
+                    // a fast cosine and sin functions, which uses a LUT (Look Up Table), to use here:
                     // https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
 
                     // dctCoefs[i][j] = c1 * c2 * mat[x][y] * cos(((2 * x + 1) * i * PI) / 16) * cos(((2 * y + 1) * j * PI) / 16);
@@ -195,4 +195,19 @@ int16_t cos1(int16_t angle) {
         angle += 1;
     }
     return sin1(angle - (int16_t)(((int32_t)INT16_MAX * 270) / 360));
+}
+
+unsigned char **quantization(unsigned char **dctCoefs) {
+
+    unsigned char **mat;
+
+    mat = malloc(8 * sizeof(char *));
+
+    for (int i = 0; i < 8; i++) {
+        mat[i] = malloc(8 * sizeof(char));
+        for (int j = 0; j < 8; j++) {
+            mat[i][j] = dctCoefs[i][j] / luminanceTable[i][j];
+        }
+    }
+    return mat;
 }
