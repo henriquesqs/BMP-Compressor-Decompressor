@@ -112,26 +112,34 @@ void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R
 }
 
 void dct(unsigned char **dctCoefs, unsigned char **mat) {
-   
+
     /*  
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         FOR GOD's SAKE WE NEED TO OPTIMIZE THIS PART OF THE CODE
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     */
 
-    int c1 = 0, c2 = 0;
+    // cos(a) = sqrt(1 - sin(a)^2))
 
-    for(int i = 0; i < 8; i++){
-        for(int j = 0; j < 8; j++){
+    int c1 = 1, c2 = 1;
+
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
             
-            if(i == 0 && j == 0) 
-                c1 = 1/sqrt(2);
+            dctCoefs[i][j] = 0;
             
-            else c1 = 1;
+            if (i == 0 && j == 0)
+            c1 = c2 = 1 / sqrt(2);
 
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
-                    dctCoefs[i][j] = c1 * c2 * mat[x][y] * cos(((2*x + 1) * i * PI) / 16) * cos(((2*y + 1) * j * PI) / 16);
+
+                    // Thanks to the writer (@author stfwi) of this page below we found
+                    // a fast cosine and sin functions to use here which uses a LUT:
+                    // https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
+
+                    // dctCoefs[i][j] = c1 * c2 * mat[x][y] * cos(((2 * x + 1) * i * PI) / 16) * cos(((2 * y + 1) * j * PI) / 16);
+                    dctCoefs[i][j] = c1 * c2 * mat[x][y] * cos1(((2 * x + 1) * i * PI) / 16) * cos1(((2 * y + 1) * j * PI) / 16);
                 }
             }
         }
@@ -159,4 +167,32 @@ void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFO
             }
         }
     }
+}
+
+int16_t sin1(int16_t angle) {
+    int16_t v0, v1;
+    if (angle < 0) {
+        angle += INT16_MAX;
+        angle += 1;
+    }
+    v0 = (angle >> INTERP_BITS);
+    if (v0 & FLIP_BIT) {
+        v0 = ~v0;
+        v1 = ~angle;
+    } else {
+        v1 = angle;
+    }
+    v0 &= TABLE_MASK;
+    v1 = sin90[v0] + (int16_t)(((int32_t)(sin90[v0 + 1] - sin90[v0]) * (v1 & INTERP_MASK)) >> INTERP_BITS);
+    if ((angle >> INTERP_BITS) & NEGATE_BIT)
+        v1 = -v1;
+    return v1;
+}
+
+int16_t cos1(int16_t angle) {
+    if (angle < 0) {
+        angle += INT16_MAX;
+        angle += 1;
+    }
+    return sin1(angle - (int16_t)(((int32_t)INT16_MAX * 270) / 360));
 }

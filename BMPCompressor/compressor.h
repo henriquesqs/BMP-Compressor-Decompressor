@@ -6,10 +6,34 @@
 #define ERROR -999999
 #define PI 3.14159265358979323846
 
+#define INT16_BITS (8 * sizeof(int16_t))
+#ifndef INT16_MAX
+#define INT16_MAX ((1 << (INT16_BITS - 1)) - 1)
+#endif
+
+#define TABLE_BITS (5)
+#define TABLE_SIZE (1 << TABLE_BITS)
+#define TABLE_MASK (TABLE_SIZE - 1)
+
+#define LOOKUP_BITS (TABLE_BITS + 2)
+#define LOOKUP_MASK ((1 << LOOKUP_BITS) - 1)
+#define FLIP_BIT (1 << TABLE_BITS)
+#define NEGATE_BIT (1 << (TABLE_BITS + 1))
+#define INTERP_BITS (INT16_BITS - 1 - LOOKUP_BITS)
+#define INTERP_MASK ((1 << INTERP_BITS) - 1)
+
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+
+static int16_t sin90[TABLE_SIZE + 1] = {
+    0x0000, 0x0647, 0x0c8b, 0x12c7, 0x18f8, 0x1f19, 0x2527, 0x2b1e,
+    0x30fb, 0x36b9, 0x3c56, 0x41cd, 0x471c, 0x4c3f, 0x5133, 0x55f4,
+    0x5a81, 0x5ed6, 0x62f1, 0x66ce, 0x6a6c, 0x6dc9, 0x70e1, 0x73b5,
+    0x7640, 0x7883, 0x7a7c, 0x7c29, 0x7d89, 0x7e9c, 0x7f61, 0x7fd7,
+    0x7fff};
 
 typedef struct BMPFILEHEADER BMPFILEHEADER; // BMP file header structure
 typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
@@ -124,5 +148,9 @@ int imageSize(BMPINFOHEADER *infoHeader);
 void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFOHEADER *infoHeader);
 
 void dct(unsigned char **dctCoefs, unsigned char **mat);
+
+int16_t sin1(int16_t angle);
+
+int16_t cos1(int16_t angle);
 
 #endif
