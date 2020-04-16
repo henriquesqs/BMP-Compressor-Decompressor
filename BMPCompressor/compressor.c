@@ -4,7 +4,7 @@ int main(int argc, char const *argv[]) {
 
     long size = 0;
     FILE *file = NULL;
-    unsigned char *bmpImage = NULL, **dctCoefs = NULL, **quantCoefs = NULL;
+    unsigned char *bmpImage = NULL;
 
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
@@ -32,9 +32,9 @@ int main(int argc, char const *argv[]) {
     unsigned char **R = NULL, **G = NULL, **B = NULL; // We're going to split the RGB channels into these 3 matrices.
 
     // Allocating enough memory to allocate the channels.
-    R = allocMatrix(R, bmpInfo);
-    G = allocMatrix(G, bmpInfo);
-    B = allocMatrix(B, bmpInfo);
+    R = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
+    G = allocMatrix(G, getHeight(bmpInfo), getWidth(bmpInfo));
+    B = allocMatrix(B, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Separates the bitmap data into its RGB components.
     separateComponents(file, bmpInfo, R, G, B);
@@ -46,14 +46,18 @@ int main(int argc, char const *argv[]) {
 
     // Dividing each component into 8x8 matrices in order to use DCT (Discrete cosine transform) algorithm,
     // due to some researchs proving that this division increases the efficiency of DCT.
-    dctCoefs = allocMatrix(dctCoefs, bmpInfo);
+
+    unsigned char **dctCoefs = allocMatrix(dctCoefs, 8, 8);
+
     divideMatrices(R, dctCoefs, bmpInfo);
     divideMatrices(G, dctCoefs, bmpInfo);
     divideMatrices(B, dctCoefs, bmpInfo);
 
     // Starting the quantization step. Here we're going to divide our DCT coefficients by
     // the quantization matrix in order to perform coefficients quantization.
-    quantCoefs = allocMatrix(quantCoefs, bmpInfo);
+
+    unsigned char **quantCoefs = allocMatrix(quantCoefs, 8, 8);
+
     quantization(quantCoefs, dctCoefs);
 
     // // Free allocated memory.
@@ -61,11 +65,11 @@ int main(int argc, char const *argv[]) {
     free(bmpFile);
     free(bmpInfo);
     free(bmpImage);
-    freeMatrix(R, bmpInfo);
-    freeMatrix(G, bmpInfo);
-    freeMatrix(B, bmpInfo);
-    freeMatrix(dctCoefs, bmpInfo);
-    freeMatrix(quantCoefs, bmpInfo);
+    freeMatrix(R, getHeight(bmpInfo));
+    freeMatrix(G, getHeight(bmpInfo));
+    freeMatrix(B, getHeight(bmpInfo));
+    freeMatrix(dctCoefs, getHeight(bmpInfo));
+    freeMatrix(quantCoefs, getHeight(bmpInfo));
 
     return SUCCESS;
 }

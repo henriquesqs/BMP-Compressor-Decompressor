@@ -54,6 +54,28 @@ static int luminanceTable[8][8] = {
 typedef struct BMPFILEHEADER BMPFILEHEADER; // BMP file header structure
 typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
 
+/*
+    Function responsible to return the width of the image
+    from its infoHeader struct.
+
+    PARAMETERS:
+        - infoHeader: struct with the necessary information.
+    
+    RETURNS the width of image.
+*/
+int getWidth(BMPINFOHEADER *infoHeader);
+
+/*
+    Function responsible to return the Height of the image
+    from its infoHeader struct.
+
+    PARAMETERS:
+        - infoHeader: struct with the necessary information.
+    
+    RETURNS the Height of image.
+*/
+int getHeight(BMPINFOHEADER *infoHeader);
+
 /* 
     Function to verify if the image is according to project's specification
     A valid image is at least 8x8 px and no greater than 1280x800 px.
@@ -113,21 +135,22 @@ void readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, u
     Function responsible to alloc the R, G and B matrices.
 
     PARAMETERS:
-        - infoHeader: struct with the necessary data to alloc the matrices;
         - mat: matrix to alloc;
+        - rows: number of rows to alloc;
+        - cols: number of columns to alloc.
     
     RETURNS allocated matrix.
 */
-unsigned char **allocMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader);
+unsigned char **allocMatrix(unsigned char **mat, int rows, int cols);
 
 /*
     Function to free a matrix, given an info header.
 
     PARAMETERS:
         - mat: matrix to free;
-        - infoHeader: struct containg some necessary info to do so.
+        - rows: number of rows to freeze.
 */
-void freeMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader);
+void freeMatrix(unsigned char **mat, int rows);
 
 /*
     Function responsible to separate the R, G, B componentes.

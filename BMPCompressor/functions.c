@@ -33,6 +33,14 @@ bool validateImage(int height, int width) {
     return (height > 1280 || height < 8 || width > 800 || width < 8) ? ERROR : SUCCESS;
 }
 
+int getWidth(BMPINFOHEADER *infoHeader) {
+    return infoHeader->biWidth;
+}
+
+int getHeight(BMPINFOHEADER *infoHeader) {
+    return infoHeader->biHeight;
+}
+
 unsigned int imageDataSize(BMPINFOHEADER *infoHeader) {
     return infoHeader->biSizeImage;
 }
@@ -82,19 +90,19 @@ void moveToBitmapData(FILE *file, BMPFILEHEADER *FH) {
     fseek(file, FH->bfOffBits, SEEK_SET);
 }
 
-unsigned char **allocMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader) {
+unsigned char **allocMatrix(unsigned char **mat, int n, int m) {
 
-    mat = malloc(infoHeader->biHeight * sizeof(char *));
+    mat = malloc(n * sizeof(char *));
 
-    for (int i = 0; i < infoHeader->biHeight; i++)
-        mat[i] = malloc(infoHeader->biWidth * sizeof(char));
+    for (int i = 0; i < n; i++)
+        mat[i] = malloc(m * sizeof(char));
 
     return mat;
 }
 
-void freeMatrix(unsigned char **mat, BMPINFOHEADER *infoHeader) {
+void freeMatrix(unsigned char **mat, int rows) {
 
-    for (int i = 0; i < infoHeader->biHeight; i++)
+    for (int i = 0; i < rows; i++)
         free(mat[i]);
 
     free(mat);
