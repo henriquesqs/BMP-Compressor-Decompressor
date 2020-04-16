@@ -214,7 +214,7 @@ void quantization(unsigned char **quantCoefs, unsigned char **dctCoefs) {
             quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
         
     
-
+    
     // printf("quantizados\n");
     // for (int i = 0; i < 8; i++) {
     //     for (int j = 0; j < 8; j++){
