@@ -167,6 +167,10 @@ void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFO
             }
         }
     }
+
+    for (int i = 0; i < 8; i++)
+        free(mat[i]);
+    free(mat);
 }
 
 int16_t sin1(int16_t angle) {
@@ -197,17 +201,9 @@ int16_t cos1(int16_t angle) {
     return sin1(angle - (int16_t)(((int32_t)INT16_MAX * 270) / 360));
 }
 
-unsigned char **quantization(unsigned char **dctCoefs) {
+void quantization(unsigned char **quantCoefs, unsigned char **dctCoefs) {
 
-    unsigned char **mat;
-
-    mat = malloc(8 * sizeof(char *));
-
-    for (int i = 0; i < 8; i++) {
-        mat[i] = malloc(8 * sizeof(char));
-        for (int j = 0; j < 8; j++) {
-            mat[i][j] = dctCoefs[i][j] / luminanceTable[i][j];
-        }
-    }
-    return mat;
+    for (int i = 0; i < 8; i++) 
+        for (int j = 0; j < 8; j++) 
+            quantCoefs[i][j] = dctCoefs[i][j] / luminanceTable[i][j];
 }

@@ -4,7 +4,7 @@ int main(int argc, char const *argv[]) {
 
     long size = 0;
     FILE *file = NULL;
-    unsigned char *bmpImage = NULL, **dctCoefs = NULL;
+    unsigned char *bmpImage = NULL, **dctCoefs = NULL, **quantCoefs = NULL;
 
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
@@ -53,7 +53,8 @@ int main(int argc, char const *argv[]) {
 
     // Starting the quantization step. Here we're going to divide our DCT coefficients by
     // the quantization matrix in order to perform coefficients quantization.
-    dctCoefs = quantization(dctCoefs);
+    quantCoefs = allocMatrix(quantCoefs, bmpInfo);
+    quantization(quantCoefs, dctCoefs);
 
     // // Free allocated memory.
     fclose(file);
@@ -64,6 +65,7 @@ int main(int argc, char const *argv[]) {
     freeMatrix(G, bmpInfo);
     freeMatrix(B, bmpInfo);
     freeMatrix(dctCoefs, bmpInfo);
+    freeMatrix(quantCoefs, bmpInfo);
 
     return SUCCESS;
 }

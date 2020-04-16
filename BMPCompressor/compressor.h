@@ -161,14 +161,42 @@ unsigned int imageDataSize(BMPINFOHEADER *infoHeader);
 */
 int imageSize(BMPINFOHEADER *infoHeader);
 
+/*
+    Function responsible to do the division of our image into its components
+    (R, G and B) which represents its channels.
+
+    PARAMETERS:
+        - component: component we want to divide;
+        - dctCoefs: matrix we're going to store the future dct coefficients;
+        - infoHeader: struct with image infos.
+    
+*/
 void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFOHEADER *infoHeader);
 
+/*
+    Discrete cosine transform (DCT) is responsible for filtering 
+    high/low spatial frequencies regions. These regions are ready to be
+    compressed without any lose of image quality.
+
+    PARAMETERS:
+        - dctCoefs: matrix where we're going to store dct result;
+        - mat: matrix with coeffs we're going to apply dct.
+*/
 void dct(unsigned char **dctCoefs, unsigned char **mat);
 
 int16_t sin1(int16_t angle);
 
 int16_t cos1(int16_t angle);
 
-unsigned char **quantization(unsigned char **dctCoefs);
+/*
+    Function responsible to apply quantization. It divides our coefficients matrix
+    (dctCoefs) by luminance table - a global static matrix.
+
+    PARAMETERS:
+        - dctCoefs: matrix with dct coefficients.
+
+    RETURNS a matrix with quantization coefficients.
+*/
+void quantization(unsigned char **quantCoefs, unsigned char **dctCoefs);
 
 #endif
