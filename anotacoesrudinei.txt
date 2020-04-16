@@ -24,6 +24,7 @@ DONE (*) 1a Etapa: separar a imagem em componentes RGB - 3 matrizes, uma pra R, 
 
 	OBS: NA ETAPA DE DESCOMPRESSAO, PEGAR A MATRIZ DE COEFICIENTES QUANTIZADOS E MULTIPLICAR PELA MATRIZ DE QUANTIZAÇÃO
 		GERANDO A MATRIZ DE COEFICIENTES DCT
+		
 -> Entropia
 
 5a Etapa: Vetorização (pega cada bloquinho e transforma em um vetor de forma que todos os zeros fiquem no final do vetor)

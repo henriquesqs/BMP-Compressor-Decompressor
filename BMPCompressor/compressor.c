@@ -60,6 +60,9 @@ int main(int argc, char const *argv[]) {
 
     quantization(quantCoefs, dctCoefs);
 
+    // On this step, we're going to apply vetorization. We do this to make easier for us
+    // to compress the image by moving all the zero values to the end of the vector.
+
     // // Free allocated memory.
     fclose(file);
     free(bmpFile);

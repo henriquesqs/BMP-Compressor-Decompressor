@@ -127,14 +127,10 @@ void dct(unsigned char **dctCoefs, unsigned char **mat) {
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     */
 
-    // cos(a) = sqrt(1 - sin(a)^2))
-
-    int c1 = 1, c2 = 1;
+    double c1 = 1, c2 = 1;
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-
-            dctCoefs[i][j] = 0;
 
             if (i == 0 && j == 0)
                 c1 = c2 = 1 / sqrt(2);
@@ -147,7 +143,7 @@ void dct(unsigned char **dctCoefs, unsigned char **mat) {
                     // https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
 
                     // dctCoefs[i][j] = c1 * c2 * mat[x][y] * cos(((2 * x + 1) * i * PI) / 16) * cos(((2 * y + 1) * j * PI) / 16);
-                    dctCoefs[i][j] = c1 * c2 * mat[x][y] * cos1(((2 * x + 1) * i * PI) / 16) * cos1(((2 * y + 1) * j * PI) / 16);
+                    dctCoefs[i][j] = c1 * c2 * mat[x][y] * cos(((2 * x + 1) * i * PI) / 16) * cos(((2 * y + 1) * j * PI) / 16);
                 }
             }
         }
@@ -172,9 +168,9 @@ void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFO
                     // level shift below, which is said to increase the performance of DCT.
 
                     mat[k][l] = component[i * 8 + k][j * 8 + l] - 128;
-                    dct(dctCoefs, mat);
                 }
             }
+            dct(dctCoefs, mat);
         }
     }
 
@@ -213,7 +209,17 @@ int16_t cos1(int16_t angle) {
 
 void quantization(unsigned char **quantCoefs, unsigned char **dctCoefs) {
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 8; i++) 
         for (int j = 0; j < 8; j++)
             quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
+        
+    
+
+    // printf("quantizados\n");
+    // for (int i = 0; i < 8; i++) {
+    //     for (int j = 0; j < 8; j++){
+    //         printf("%d, ", quantCoefs[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 }
