@@ -129,7 +129,7 @@ void dct(unsigned char **dctCoefs, unsigned char **mat) {
             dctCoefs[i][j] = 0;
             
             if (i == 0 && j == 0)
-            c1 = c2 = 1 / sqrt(2);
+                c1 = c2 = 1 / sqrt(2);
 
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
