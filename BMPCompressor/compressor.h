@@ -207,8 +207,16 @@ void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFO
 */
 void dct(unsigned char **dctCoefs, unsigned char **mat);
 
+/*
+    Fast sin function get from:
+    https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
+*/
 int16_t sin1(int16_t angle);
 
+/*
+    Fast cos function get from:
+    https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
+*/
 int16_t cos1(int16_t angle);
 
 /*
