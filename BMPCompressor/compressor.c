@@ -47,27 +47,25 @@ int main(int argc, char const *argv[]) {
     // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
     // due to some researchs proving that this division increases the efficiency of DCT.
 
-    unsigned char **dctCoefs = allocMatrix(dctCoefs, 8, 8);
+    int **dctCoefs = allocIntMatrix(dctCoefs, 8, 8);
+
+    // Applying level shifting
+    levelShift(dctCoefs, 128);
 
     divideMatrices(R, dctCoefs, bmpInfo);
     divideMatrices(G, dctCoefs, bmpInfo);
     divideMatrices(B, dctCoefs, bmpInfo);
 
-    // Applying level shifting
-    levelShift(dctCoefs, 128);
-
     // Starting the quantization step. Here we're going to divide our DCT coefficients by
-    // the quantization matrix in order to perform coefficients quantization.
+    // the quantization table in order to perform coefficients quantization.
 
-    unsigned char **quantCoefs = allocMatrix(quantCoefs, 8, 8);
+    int **quantCoefs = allocIntMatrix(quantCoefs, 8, 8);
 
     quantization(quantCoefs, dctCoefs);
 
     // On this step, we're going to apply vectorization using zig-zag scan. We do this to
     // make easier for us to compress the image by moving all the zero values to the end of the vector.
     
-    unsigned char vector[64];
-
     // // Free allocated memory.
     fclose(file);
     free(bmpFile);
@@ -76,8 +74,8 @@ int main(int argc, char const *argv[]) {
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));
-    freeMatrix(dctCoefs, 8);
-    freeMatrix(quantCoefs, 8);
+    freeIntMatrix(dctCoefs, 8);
+    freeIntMatrix(quantCoefs, 8);
 
     return SUCCESS;
 }

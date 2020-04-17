@@ -100,7 +100,25 @@ unsigned char **allocMatrix(unsigned char **mat, int n, int m) {
     return mat;
 }
 
+int **allocIntMatrix(int **mat, int n, int m) {
+
+    mat = malloc(n * sizeof(int *));
+
+    for (int i = 0; i < n; i++)
+        mat[i] = malloc(m * sizeof(int));
+
+    return mat;
+}
+
 void freeMatrix(unsigned char **mat, int rows) {
+
+    for (int i = 0; i < rows; i++)
+        free(mat[i]);
+
+    free(mat);
+}
+
+void freeIntMatrix(int **mat, int rows) {
 
     for (int i = 0; i < rows; i++)
         free(mat[i]);
@@ -119,7 +137,7 @@ void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R
     }
 }
 
-void levelShift(unsigned char **dctCoefs, int offBits) {
+void levelShift(int **dctCoefs, int offBits) {
 
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
@@ -131,7 +149,8 @@ void levelShift(unsigned char **dctCoefs, int offBits) {
     //     printf("\n");
     // }
 }
-void dct(unsigned char **dctCoefs, unsigned char **mat) {
+
+void dct(int **dctCoefs, int **mat) {
 
     /*  
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -162,15 +181,14 @@ void dct(unsigned char **dctCoefs, unsigned char **mat) {
     }
 }
 
+void divideMatrices(unsigned char **component, int **dctCoefs, BMPINFOHEADER *infoHeader) {
 
-void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFOHEADER *infoHeader) {
+    int **mat = NULL;
 
-    unsigned char **mat = NULL;
-
-    mat = malloc(8 * sizeof(char *));
+    mat = malloc(8 * sizeof(int *));
 
     for (int i = 0; i < 8; i++)
-        mat[i] = malloc(8 * sizeof(char));
+        mat[i] = malloc(8 * sizeof(int));
 
     for (int i = 0; i < infoHeader->biHeight / 8; i++) {
         for (int j = 0; j < infoHeader->biWidth / 8; j++) {
@@ -220,7 +238,7 @@ int16_t cos1(int16_t angle) {
     return sin1(angle - (int16_t)(((int32_t)INT16_MAX * 270) / 360));
 }
 
-void quantization(unsigned char **quantCoefs, unsigned char **dctCoefs) {
+void quantization(int **quantCoefs, int **dctCoefs) {
 
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)

@@ -132,7 +132,7 @@ void moveToBitmapData(FILE *file, BMPFILEHEADER *FH);
 void readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, unsigned char **G, unsigned char **B);
 
 /*
-    Function responsible to alloc the R, G and B matrices.
+    Function responsible to alloc unsigned char** matrices.
 
     PARAMETERS:
         - mat: matrix to alloc;
@@ -144,6 +144,18 @@ void readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, u
 unsigned char **allocMatrix(unsigned char **mat, int rows, int cols);
 
 /*
+    Function responsible to alloc int matrices.
+
+    PARAMETERS:
+        - mat: matrix to alloc;
+        - rows: number of rows to alloc;
+        - cols: number of columns to alloc.
+    
+    RETURNS allocated matrix.
+*/
+int **allocIntMatrix(int **mat, int rows, int cols);
+
+/*
     Function to free a matrix, given an info header.
 
     PARAMETERS:
@@ -151,6 +163,15 @@ unsigned char **allocMatrix(unsigned char **mat, int rows, int cols);
         - rows: number of rows to freeze.
 */
 void freeMatrix(unsigned char **mat, int rows);
+
+/*
+    Function to free a matrix, given an info header.
+
+    PARAMETERS:
+        - mat: matrix to free;
+        - rows: number of rows to freeze.
+*/
+void freeIntMatrix(int **mat, int rows);
 
 /*
     Function responsible to separate the R, G, B componentes.
@@ -194,7 +215,7 @@ int imageSize(BMPINFOHEADER *infoHeader);
         - infoHeader: struct with image infos.
     
 */
-void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFOHEADER *infoHeader);
+void divideMatrices(unsigned char **component, int **dctCoefs, BMPINFOHEADER *infoHeader);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering 
@@ -205,11 +226,11 @@ void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFO
         - dctCoefs: matrix where we're going to store dct result;
         - mat: matrix with coeffs we're going to apply dct.
 */
-void dct(unsigned char **dctCoefs, unsigned char **mat);
+void dct(int **dctCoefs, int **mat);
 
 /*
 */
-void levelShift(unsigned char **dctCoefs, int offBits);
+void levelShift(int **dctCoefs, int offBits);
 
 /*
     Fast sin function get from:
@@ -232,11 +253,11 @@ int16_t cos1(int16_t angle);
         - dctCoefs: matrix with dct coefficients.
 
 */
-void quantization(unsigned char **quantCoefs, unsigned char **dctCoefs);
+void quantization(int **quantCoefs, int **dctCoefs);
 
 /*
     This function is responsible to apply vectorization on
 */
-void vectorization(unsigned char **quantCoefs, unsigned char vector[]);
+void vectorization(int **quantCoefs, int vector[]);
 
 #endif
