@@ -251,7 +251,7 @@ void vectorization(int vector[64], int **quantCoefs) {
                     col++;
                     printf("lin: %d\n", lin);
                     printf("col: %d\n", col);
-                    vector[steps++] = quantCoefs[lin][col];
+                    vector[steps++] = quantCoefs[lin][col]; // verificar push
                 }
                 while(col > 0){
                     col--;
