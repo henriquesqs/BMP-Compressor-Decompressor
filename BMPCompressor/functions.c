@@ -214,7 +214,7 @@ void quantization(int **quantCoefs, int **dctCoefs) {
         for (int j = 0; j < 8; j++)
             quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
 
-    if(DEBUG){    
+    // if (DEBUG) {
         printf("quantizados\n");
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -222,67 +222,54 @@ void quantization(int **quantCoefs, int **dctCoefs) {
             }
             printf("\n");
         }
-    }
+    // }
 }
 
 void vectorization(int vector[64], int **quantCoefs) {
 
-    int dir = -1; // Every time dir is < 0, go down. Otherwise, go right.
-    int steps = 0; // Variable to avoid buffer overflow.
-    int lin = 0, col = 0;  // Variables to control lines and col from int**.
+    int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
+    int steps = 0;        // Variable to avoid buffer overflow.
+    int lin = 0, col = 0; // Variables to control lines and col from int**.
 
     vector[steps++] = quantCoefs[lin][col];
 
     while (steps < 64) {
 
-        printf("steps: %d\n", steps);
-        
-        printf("\ndir: %d\n", dir);
-        if(lin == 0){ // means we cant go up anymore
-            
-            if(col == 0){
+        if (lin == 0) { // means we cant go up anymore
+
+            if (col == 0) {
                 col++;
-                printf("lin: %d\n", lin);
-                printf("col: %d\n", col);
                 vector[steps++] = quantCoefs[lin][col];
-            }
-            else{
-                if(dir < 0){
+            } else {
+                if (dir < 0) {
                     col++;
-                    printf("lin: %d\n", lin);
-                    printf("col: %d\n", col);
-                    vector[steps++] = quantCoefs[lin][col]; // verificar push
+                    vector[steps++] = quantCoefs[lin][col];
                 }
-                while(col > 0){
+                while (col > 0) {
                     col--;
                     lin++;
-                    printf("lin: %d\n", lin);
-                    printf("col: %d\n", col);
                     vector[steps++] = quantCoefs[lin][col];
+                    if (steps >= 64)
+                        break;
                 }
             }
         }
 
-        if(col == 0){ // means we cant go left anymore
-            
-            if(dir > 0){
+        if (col == 0) { // means we cant go left anymore
+
+            if (dir > 0) {
                 lin++;
-                printf("lin: %d\n", lin);
-                printf("col: %d\n", col);
                 vector[steps++] = quantCoefs[lin][col];
             }
 
-            while(lin > 0){
+            while (lin > 0) {
                 lin--;
                 col++;
-                printf("lin: %d\n", lin);
-                printf("col: %d\n", col);
                 vector[steps++] = quantCoefs[lin][col];
             }
         }
 
         dir *= -1;
-
     }
 
     printf("vector:\n");
