@@ -49,15 +49,14 @@ int main(int argc, char const *argv[]) {
 
     int **dctCoefs = allocIntMatrix(dctCoefs, 8, 8);
 
-    // Applying level shifting
-    levelShift(dctCoefs, 128);
+    levelShift(dctCoefs, 128); // Applying level shifting in order to increase DCT performance.
 
     divideMatrices(R, dctCoefs, bmpInfo);
     divideMatrices(G, dctCoefs, bmpInfo);
     divideMatrices(B, dctCoefs, bmpInfo);
 
     // Starting the quantization step. Here we're going to divide our DCT coefficients by
-    // the quantization table in order to perform coefficients quantization.
+    // the quantization table so we can perform coefficients quantization.
 
     int **quantCoefs = allocIntMatrix(quantCoefs, 8, 8);
 
@@ -65,6 +64,9 @@ int main(int argc, char const *argv[]) {
 
     // On this step, we're going to apply vectorization using zig-zag scan. We do this to
     // make easier for us to compress the image by moving all the zero values to the end of the vector.
+    // Its told that this step helps to increase run length encoding performance.
+    int vector[64] = {};
+    vectorization(vector, quantCoefs);
     
     // // Free allocated memory.
     fclose(file);

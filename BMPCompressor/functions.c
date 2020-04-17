@@ -137,17 +137,11 @@ void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R
     }
 }
 
-void levelShift(int **dctCoefs, int offBits) {
+void levelShift(int **mat, int offBits) {
 
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
-            dctCoefs[i][j] -= offBits;
-
-    // for (int i = 0; i < 8; i++) {
-    //     for (int j = 0; j < 8; j++)
-    //         printf("%d, ", dctCoefs[i][j]);
-    //     printf("\n");
-    // }
+            mat[i][j] -= offBits;
 }
 
 void dct(int **dctCoefs, int **mat) {
@@ -169,11 +163,6 @@ void dct(int **dctCoefs, int **mat) {
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
 
-                    // Thanks to the writer (@author stfwi) of this page no the link below, we found
-                    // a fast cosine and sin functions, which uses a LUT (Look Up Table), to use here:
-                    // https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
-
-                    // dctCoefs[i][j] = c1 * c2 * mat[x][y] * cos(((2 * x + 1) * i * PI) / 16) * cos(((2 * y + 1) * j * PI) / 16);
                     dctCoefs[i][j] = c1 * c2 * mat[x][y] * cos(((2 * x + 1) * i * PI) / 16) * cos(((2 * y + 1) * j * PI) / 16);
                 }
             }
@@ -210,45 +199,94 @@ void divideMatrices(unsigned char **component, int **dctCoefs, BMPINFOHEADER *in
     free(mat);
 }
 
-int16_t sin1(int16_t angle) {
-    int16_t v0, v1;
-    if (angle < 0) {
-        angle += INT16_MAX;
-        angle += 1;
-    }
-    v0 = (angle >> INTERP_BITS);
-    if (v0 & FLIP_BIT) {
-        v0 = ~v0;
-        v1 = ~angle;
-    } else {
-        v1 = angle;
-    }
-    v0 &= TABLE_MASK;
-    v1 = sin90[v0] + (int16_t)(((int32_t)(sin90[v0 + 1] - sin90[v0]) * (v1 & INTERP_MASK)) >> INTERP_BITS);
-    if ((angle >> INTERP_BITS) & NEGATE_BIT)
-        v1 = -v1;
-    return v1;
-}
-
-int16_t cos1(int16_t angle) {
-    if (angle < 0) {
-        angle += INT16_MAX;
-        angle += 1;
-    }
-    return sin1(angle - (int16_t)(((int32_t)INT16_MAX * 270) / 360));
-}
-
 void quantization(int **quantCoefs, int **dctCoefs) {
+
+    int luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
+                                12, 12, 14, 19, 26, 58, 60, 55,
+                                14, 13, 16, 24, 40, 57, 69, 56,
+                                14, 17, 22, 29, 51, 87, 80, 62,
+                                18, 22, 37, 56, 68, 109, 103, 77,
+                                24, 35, 55, 64, 81, 104, 113, 92,
+                                49, 64, 78, 87, 103, 121, 120, 101,
+                                72, 92, 95, 98, 112, 100, 103, 99};
 
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
             quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
 
-    printf("quantizados\n");
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++){
-            printf("%d, ", quantCoefs[i][j]);
+    if(DEBUG){    
+        printf("quantizados\n");
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                printf("%d, ", quantCoefs[i][j]);
+            }
+            printf("\n");
         }
-        printf("\n");
+    }
+}
+
+void vectorization(int vector[64], int **quantCoefs) {
+
+    int dir = -1; // Every time dir is < 0, go down. Otherwise, go right.
+    int steps = 0; // Variable to avoid buffer overflow.
+    int lin = 0, col = 0;  // Variables to control lines and col from int**.
+
+    vector[steps++] = quantCoefs[lin][col];
+
+    while (steps < 64) {
+
+        printf("steps: %d\n", steps);
+        
+        printf("\ndir: %d\n", dir);
+        if(lin == 0){ // means we cant go up anymore
+            
+            if(col == 0){
+                col++;
+                printf("lin: %d\n", lin);
+                printf("col: %d\n", col);
+                vector[steps++] = quantCoefs[lin][col];
+            }
+            else{
+                if(dir < 0){
+                    col++;
+                    printf("lin: %d\n", lin);
+                    printf("col: %d\n", col);
+                    vector[steps++] = quantCoefs[lin][col];
+                }
+                while(col > 0){
+                    col--;
+                    lin++;
+                    printf("lin: %d\n", lin);
+                    printf("col: %d\n", col);
+                    vector[steps++] = quantCoefs[lin][col];
+                }
+            }
+        }
+
+        if(col == 0){ // means we cant go left anymore
+            
+            if(dir > 0){
+                lin++;
+                printf("lin: %d\n", lin);
+                printf("col: %d\n", col);
+                vector[steps++] = quantCoefs[lin][col];
+            }
+
+            while(lin > 0){
+                lin--;
+                col++;
+                printf("lin: %d\n", lin);
+                printf("col: %d\n", col);
+                vector[steps++] = quantCoefs[lin][col];
+            }
+        }
+
+        dir *= -1;
+
+    }
+
+    printf("vector:\n");
+    for (int j = 0; j < 64; j++) {
+        printf("%d, ", vector[j]);
     }
 }

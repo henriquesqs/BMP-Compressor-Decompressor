@@ -7,49 +7,11 @@
 #define ERROR -999999
 #define PI 3.14159265358979323846
 
-// Some defines to use in the (fast) sin1 cos1 functions
-// special thanks to stfwi, writer of the article below
-// https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
-
-#define INT16_BITS (8 * sizeof(int16_t))
-#ifndef INT16_MAX
-#define INT16_MAX ((1 << (INT16_BITS - 1)) - 1)
-#endif
-
-#define TABLE_BITS (5)
-#define TABLE_SIZE (1 << TABLE_BITS)
-#define TABLE_MASK (TABLE_SIZE - 1)
-
-#define LOOKUP_BITS (TABLE_BITS + 2)
-#define LOOKUP_MASK ((1 << LOOKUP_BITS) - 1)
-#define FLIP_BIT (1 << TABLE_BITS)
-#define NEGATE_BIT (1 << (TABLE_BITS + 1))
-#define INTERP_BITS (INT16_BITS - 1 - LOOKUP_BITS)
-#define INTERP_MASK ((1 << INTERP_BITS) - 1)
-// -----------------------------------------------------
-
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-
-static int16_t sin90[TABLE_SIZE + 1] = {
-    0x0000, 0x0647, 0x0c8b, 0x12c7, 0x18f8, 0x1f19, 0x2527, 0x2b1e,
-    0x30fb, 0x36b9, 0x3c56, 0x41cd, 0x471c, 0x4c3f, 0x5133, 0x55f4,
-    0x5a81, 0x5ed6, 0x62f1, 0x66ce, 0x6a6c, 0x6dc9, 0x70e1, 0x73b5,
-    0x7640, 0x7883, 0x7a7c, 0x7c29, 0x7d89, 0x7e9c, 0x7f61, 0x7fd7,
-    0x7fff};
-
-static int luminanceTable[8][8] = {
-    16,11,10,16,24,40,51,61,
-    12,12,14,19,26,58,60,55,
-    14,13,16,24,40,57,69,56,
-    14,17,22,29,51,87,80,62,
-    18,22,37,56,68,109,103,77,
-    24,35,55,64,81,104,113,92,
-    49,64,78,87,103,121,120,101,
-    72,92,95,98,112,100,103,99};
 
 typedef struct BMPFILEHEADER BMPFILEHEADER; // BMP file header structure
 typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
@@ -229,24 +191,18 @@ void divideMatrices(unsigned char **component, int **dctCoefs, BMPINFOHEADER *in
 void dct(int **dctCoefs, int **mat);
 
 /*
-*/
-void levelShift(int **dctCoefs, int offBits);
+    Function responsible to apply a level shift.
 
-/*
-    Fast sin function get from:
-    https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
-*/
-int16_t sin1(int16_t angle);
+    PARAMETERS:
+        - mat: matrix to apply level shift;
+        - offBits: quantity of bits to shift.
 
-/*
-    Fast cos function get from:
-    https://www.atwillys.de/content/cc/sine-lookup-for-embedded-in-c/?lang=en
 */
-int16_t cos1(int16_t angle);
+void levelShift(int **mat, int offBits);
 
 /*
     Function responsible to apply quantization. It divides our coefficients matrix
-    (dctCoefs) by luminance table - a global static matrix.
+    (dctCoefs) by a luminance table.
 
     PARAMETERS:
         - quantCoefs: matrix to store quantized coefficients;
@@ -258,6 +214,6 @@ void quantization(int **quantCoefs, int **dctCoefs);
 /*
     This function is responsible to apply vectorization on
 */
-void vectorization(int **quantCoefs, int vector[]);
+void vectorization(int vector[64], int **quantCoefs);
 
 #endif
