@@ -215,13 +215,13 @@ void quantization(int **quantCoefs, int **dctCoefs) {
             quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
 
     // if (DEBUG) {
-        printf("quantizados\n");
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                printf("%d, ", quantCoefs[i][j]);
-            }
-            printf("\n");
+    printf("quantizados\n");
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            printf("%d, ", quantCoefs[i][j]);
         }
+        printf("\n");
+    }
     // }
 }
 
@@ -235,45 +235,44 @@ void vectorization(int vector[64], int **quantCoefs) {
 
     while (steps < 64) {
 
-        if (lin == 0) { // means we cant go up anymore
+        if (lin == 0) { // it means we cant go up anymore
 
-            if (col == 0) {
+            if (dir < 0) {
                 col++;
                 vector[steps++] = quantCoefs[lin][col];
-            } else {
-                if (dir < 0) {
-                    col++;
-                    vector[steps++] = quantCoefs[lin][col];
-                }
+                dir *= -1;
+            }
+
+            else {
                 while (col > 0) {
-                    col--;
                     lin++;
+                    col--;
                     vector[steps++] = quantCoefs[lin][col];
-                    if (steps >= 64)
-                        break;
                 }
             }
         }
 
-        if (col == 0) { // means we cant go left anymore
+        else if (col == 0) {
 
             if (dir > 0) {
                 lin++;
+                if(lin == 8) break;
                 vector[steps++] = quantCoefs[lin][col];
+                dir *= -1;
             }
 
-            while (lin > 0) {
-                lin--;
-                col++;
-                vector[steps++] = quantCoefs[lin][col];
+            else {
+                while (lin > 0) {
+                    lin--;
+                    col++;
+                    vector[steps++] = quantCoefs[lin][col];
+                }
             }
         }
-
-        dir *= -1;
     }
 
-    printf("vector:\n");
-    for (int j = 0; j < 64; j++) {
-        printf("%d, ", vector[j]);
-    }
+    // printf("vector after zigzag scan:\n");
+    // for (int j = 0; j < 64; j++) {
+    //     printf("%d, ", vector[j]);
+    // }
 }
