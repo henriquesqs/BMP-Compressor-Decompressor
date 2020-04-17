@@ -119,6 +119,18 @@ void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R
     }
 }
 
+void levelShift(unsigned char **dctCoefs, int offBits) {
+
+    for (int i = 0; i < 8; i++)
+        for (int j = 0; j < 8; j++)
+            dctCoefs[i][j] -= offBits;
+
+    // for (int i = 0; i < 8; i++) {
+    //     for (int j = 0; j < 8; j++)
+    //         printf("%d, ", dctCoefs[i][j]);
+    //     printf("\n");
+    // }
+}
 void dct(unsigned char **dctCoefs, unsigned char **mat) {
 
     /*  
@@ -150,18 +162,6 @@ void dct(unsigned char **dctCoefs, unsigned char **mat) {
     }
 }
 
-void levelShift(unsigned char **dctCoefs, int offBits) {
-
-    for (int i = 0; i < 8; i++)
-        for (int j = 0; j < 8; j++)
-            dctCoefs[i][j] -= offBits;
-
-    // for (int i = 0; i < 8; i++) {
-    //     for (int j = 0; j < 8; j++)
-    //         printf("%d, ", dctCoefs[i][j]);
-    //     printf("\n");
-    // }
-}
 
 void divideMatrices(unsigned char **component, unsigned char **dctCoefs, BMPINFOHEADER *infoHeader) {
 
