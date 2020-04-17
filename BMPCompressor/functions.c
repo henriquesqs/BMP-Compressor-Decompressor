@@ -214,24 +214,24 @@ void quantization(int **quantCoefs, int **dctCoefs) {
         for (int j = 0; j < 8; j++)
             quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
 
-    // if (DEBUG) {
-    printf("quantizados\n");
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            printf("%d, ", quantCoefs[i][j]);
+    if (DEBUG) {
+        printf("quantizados\n");
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                printf("%d, ", quantCoefs[i][j]);
+            }
+            printf("\n");
         }
-        printf("\n");
     }
-    // }
 }
 
-void vectorization(int vector[64], int **quantCoefs) {
+void vectorization(int vector[64], int **mat) {
 
     int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
     int steps = 0;        // Variable to avoid buffer overflow.
     int lin = 0, col = 0; // Variables to control lines and col from int**.
 
-    vector[steps++] = quantCoefs[lin][col];
+    vector[steps++] = mat[lin][col];
 
     while (steps < 64) {
 
@@ -239,7 +239,7 @@ void vectorization(int vector[64], int **quantCoefs) {
 
             if (dir < 0) {
                 col++;
-                vector[steps++] = quantCoefs[lin][col];
+                vector[steps++] = mat[lin][col];
                 dir *= -1;
             }
 
@@ -247,7 +247,7 @@ void vectorization(int vector[64], int **quantCoefs) {
                 while (col > 0) {
                     lin++;
                     col--;
-                    vector[steps++] = quantCoefs[lin][col];
+                    vector[steps++] = mat[lin][col];
                 }
             }
         }
@@ -257,7 +257,7 @@ void vectorization(int vector[64], int **quantCoefs) {
             if (dir > 0) {
                 lin++;
                 if(lin == 8) break;
-                vector[steps++] = quantCoefs[lin][col];
+                vector[steps++] = mat[lin][col];
                 dir *= -1;
             }
 
@@ -265,7 +265,7 @@ void vectorization(int vector[64], int **quantCoefs) {
                 while (lin > 0) {
                     lin--;
                     col++;
-                    vector[steps++] = quantCoefs[lin][col];
+                    vector[steps++] = mat[lin][col];
                 }
             }
         }

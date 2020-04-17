@@ -212,8 +212,13 @@ void levelShift(int **mat, int offBits);
 void quantization(int **quantCoefs, int **dctCoefs);
 
 /*
-    This function is responsible to apply vectorization on
+    This function is responsible to apply vectorization on a matrix using zig-zag scan.
+    This will helps in the next step as it puts zeros into the final of the vector.
+
+    PARAMETERS:
+        - vector: vector to store elements;
+        - mat: matrix to apply vectorization.
 */
-void vectorization(int vector[64], int **quantCoefs);
+void vectorization(int vector[64], int **mat);
 
 #endif
