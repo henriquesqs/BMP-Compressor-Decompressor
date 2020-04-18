@@ -262,7 +262,7 @@ void vectorization(int vector[64], int **mat) {
             }
 
             else {
-                while (lin > 0 && col<8) {
+                while (lin > 0 && col < 8) {
                     lin--;
                     col++;
                     vector[steps++] = mat[lin][col];
