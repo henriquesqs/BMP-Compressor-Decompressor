@@ -39,6 +39,15 @@ int main(int argc, char const *argv[]) {
     // Separates the bitmap data into its RGB components.
     separateComponents(file, bmpInfo, R, G, B);
 
+    // Now we're going to convert from RGB to YCbCr to increase DCT performance.
+    unsigned char **Y = NULL, **Cb = NULL, **Cr = NULL;
+
+    Y = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = allocMatrix(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = allocMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    rgbToYcbcr(R, G, B, Y, Cb, Cr);
+
     if (DEBUG) {
         long location = ftell(file);
         printf("current location %ld and file's final location %ld\n", location, size);
@@ -47,18 +56,18 @@ int main(int argc, char const *argv[]) {
     // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
     // due to some researchs proving that this division increases the efficiency of DCT.
 
-    int **dctCoefs = allocIntMatrix(dctCoefs, 8, 8);
+    int **dctCoefs = allocIntMatrix(dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    levelShift(dctCoefs, 128); // Applying level shifting in order to increase DCT performance.
+    levelShift(dctCoefs, 128); // Applying level shift in order to increase DCT performance.
 
-    divideMatrices(R, dctCoefs, bmpInfo);
-    divideMatrices(G, dctCoefs, bmpInfo);
-    divideMatrices(B, dctCoefs, bmpInfo);
+    divideMatrices(Y, dctCoefs, bmpInfo);
+    divideMatrices(Cb, dctCoefs, bmpInfo);
+    divideMatrices(Cr, dctCoefs, bmpInfo);
 
     // Starting the quantization step. Here we're going to divide our DCT coefficients by
     // the quantization table so we can perform coefficients quantization.
 
-    int **quantCoefs = allocIntMatrix(quantCoefs, 8, 8);
+    int **quantCoefs = allocIntMatrix(quantCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
     quantization(quantCoefs, dctCoefs);
 
@@ -67,7 +76,7 @@ int main(int argc, char const *argv[]) {
     // Its told that this step helps to increase run length encoding performance.
     int vector[64] = {};
     vectorization(vector, quantCoefs);
-    
+
     // // Free allocated memory.
     fclose(file);
     free(bmpFile);
@@ -76,8 +85,8 @@ int main(int argc, char const *argv[]) {
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));
-    freeIntMatrix(dctCoefs, 8);
-    freeIntMatrix(quantCoefs, 8);
+    freeIntMatrix(dctCoefs, getHeight(bmpInfo));
+    freeIntMatrix(quantCoefs, getHeight(bmpInfo));
 
     return SUCCESS;
 }

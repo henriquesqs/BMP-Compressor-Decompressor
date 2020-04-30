@@ -221,4 +221,6 @@ void quantization(int **quantCoefs, int **dctCoefs);
 */
 void vectorization(int vector[64], int **mat);
 
+void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, unsigned char **Y, unsigned char **Cb, unsigned char **Cr);
+
 #endif

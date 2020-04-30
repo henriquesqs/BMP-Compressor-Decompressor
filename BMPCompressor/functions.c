@@ -151,14 +151,14 @@ void dct(int **dctCoefs, int **mat) {
         FOR GOD's SAKE WE NEED TO OPTIMIZE THIS PART OF THE CODE
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     */
-   
+
     double c1, c2;
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
 
             dctCoefs[i][j] = 0; // initializing matrix
-            c1 = c2 = 1; // default value of consts
+            c1 = c2 = 1;        // default value of consts
 
             if (i == 0)
                 c1 = (1 / sqrt(2));
@@ -168,8 +168,8 @@ void dct(int **dctCoefs, int **mat) {
 
             int aux = 0; // aux variable to store sum values
 
-            for (int x = 0; x < 8; x++) 
-                for (int y = 0; y < 8; y++) 
+            for (int x = 0; x < 8; x++)
+                for (int y = 0; y < 8; y++)
                     aux += mat[x][y] * cos((2 * x + 1) * i * PI / 16) * cos((2 * y + 1) * j * PI / 16);
 
             dctCoefs[i][j] = c1 * c2 * 1 / 4 * aux;
@@ -263,7 +263,8 @@ void vectorization(int vector[64], int **mat) {
 
             if (dir > 0) {
                 lin++;
-                if(lin == 8) break;
+                if (lin == 8)
+                    break;
                 vector[steps++] = mat[lin][col];
                 dir *= -1;
             }
@@ -282,4 +283,17 @@ void vectorization(int vector[64], int **mat) {
     // for (int j = 0; j < 64; j++) {
     //     printf("%d, ", vector[j]);
     // }
+}
+
+void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, unsigned char **Y, unsigned char **Cb, unsigned char **Cr) {
+
+    double Kr = 0.299, Kb = 0.114;
+
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Y[i][j] = Kr * R[i][j] + (1 - Kb - Kr) * G[i][j] + Kb * B[i][j];
+            Cb[i][j] = (0.5 / (1 - Kb)) * (B[i][j] - Y[i][j]);
+            Cr[i][j] = (0.5 / (1 - Kr)) * (R[i][j] - Y[i][j]);
+        }
+    }
 }
