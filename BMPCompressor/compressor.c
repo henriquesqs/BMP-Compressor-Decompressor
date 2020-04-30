@@ -56,7 +56,7 @@ int main(int argc, char const *argv[]) {
     // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
     // due to some researchs proving that this division increases the efficiency of DCT.
 
-    int **dctCoefs = allocIntMatrix(dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
+    double **dctCoefs = allocDoubleMatrix(dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
     levelShift(dctCoefs, 128); // Applying level shift in order to increase DCT performance.
 
@@ -67,7 +67,7 @@ int main(int argc, char const *argv[]) {
     // Starting the quantization step. Here we're going to divide our DCT coefficients by
     // the quantization table so we can perform coefficients quantization.
 
-    int **quantCoefs = allocIntMatrix(quantCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
+    unsigned char **quantCoefs = allocMatrix(quantCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
     quantization(quantCoefs, dctCoefs);
 
@@ -85,8 +85,8 @@ int main(int argc, char const *argv[]) {
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));
-    freeIntMatrix(dctCoefs, getHeight(bmpInfo));
-    freeIntMatrix(quantCoefs, getHeight(bmpInfo));
+    freeDoubleMatrix(dctCoefs, getHeight(bmpInfo));
+    freeMatrix(quantCoefs, getHeight(bmpInfo));
 
     return SUCCESS;
 }

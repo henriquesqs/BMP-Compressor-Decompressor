@@ -118,20 +118,41 @@ unsigned char **allocMatrix(unsigned char **mat, int rows, int cols);
 int **allocIntMatrix(int **mat, int rows, int cols);
 
 /*
-    Function to free a matrix, given an info header.
+    Function responsible to alloc double matrices.
+
+    PARAMETERS:
+        - mat: matrix to alloc;
+        - rows: number of rows to alloc;
+        - cols: number of columns to alloc.
+    
+    RETURNS allocated matrix.
+*/
+double **allocDoubleMatrix(double **mat, int rows, int cols);
+
+/*
+    Function to free a matrix, given its rows.
 
     PARAMETERS:
         - mat: matrix to free;
-        - rows: number of rows to freeze.
+        - rows: number of rows to free.
+*/
+void freeDoubleMatrix(double **mat, int rows);
+
+/*
+    Function to free a matrix, given its rows.
+
+    PARAMETERS:
+        - mat: matrix to free;
+        - rows: number of rows to free.
 */
 void freeMatrix(unsigned char **mat, int rows);
 
 /*
-    Function to free a matrix, given an info header.
+    Function to free a matrix, given its rows.
 
     PARAMETERS:
         - mat: matrix to free;
-        - rows: number of rows to freeze.
+        - rows: number of rows to free.
 */
 void freeIntMatrix(int **mat, int rows);
 
@@ -177,7 +198,7 @@ int imageSize(BMPINFOHEADER *infoHeader);
         - infoHeader: struct with image infos.
     
 */
-void divideMatrices(unsigned char **component, int **dctCoefs, BMPINFOHEADER *infoHeader);
+void divideMatrices(unsigned char **component, double **dctCoefs, BMPINFOHEADER *infoHeader);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering 
@@ -188,17 +209,17 @@ void divideMatrices(unsigned char **component, int **dctCoefs, BMPINFOHEADER *in
         - dctCoefs: matrix where we're going to store dct result;
         - mat: matrix with coeffs we're going to apply dct.
 */
-void dct(int **dctCoefs, int **mat);
+void dct(double **dctCoefs, unsigned char **mat);
 
 /*
-    Function responsible to apply a level shift.
+    Function responsible to apply a level shift in double matrices.
 
     PARAMETERS:
         - mat: matrix to apply level shift;
         - offBits: quantity of bits to shift.
 
 */
-void levelShift(int **mat, int offBits);
+void levelShift(double **mat, int offBits);
 
 /*
     Function responsible to apply quantization. It divides our coefficients matrix
@@ -209,7 +230,7 @@ void levelShift(int **mat, int offBits);
         - dctCoefs: matrix with dct coefficients.
 
 */
-void quantization(int **quantCoefs, int **dctCoefs);
+void quantization(unsigned char **quantCoefs, double **dctCoefs);
 
 /*
     This function is responsible to apply vectorization on a matrix using zig-zag scan.
@@ -219,7 +240,7 @@ void quantization(int **quantCoefs, int **dctCoefs);
         - vector: vector to store elements;
         - mat: matrix to apply vectorization.
 */
-void vectorization(int vector[64], int **mat);
+void vectorization(int vector[64], unsigned char **mat);
 
 void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, unsigned char **Y, unsigned char **Cb, unsigned char **Cr);
 

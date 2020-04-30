@@ -110,6 +110,24 @@ int **allocIntMatrix(int **mat, int n, int m) {
     return mat;
 }
 
+double **allocDoubleMatrix(double **mat, int n, int m) {
+
+    mat = malloc(n * sizeof(double *));
+
+    for (int i = 0; i < n; i++)
+        mat[i] = malloc(m * sizeof(double));
+
+    return mat;
+}
+
+void freeDoubleMatrix(double **mat, int rows) {
+
+    for (int i = 0; i < rows; i++)
+        free(mat[i]);
+
+    free(mat);
+}
+
 void freeMatrix(unsigned char **mat, int rows) {
 
     for (int i = 0; i < rows; i++)
@@ -137,14 +155,14 @@ void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R
     }
 }
 
-void levelShift(int **mat, int offBits) {
+void levelShift(double **mat, int offBits) {
 
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
             mat[i][j] -= offBits;
 }
 
-void dct(int **dctCoefs, int **mat) {
+void dct(double **dctCoefs, unsigned char **mat) {
 
     /*  
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -177,9 +195,9 @@ void dct(int **dctCoefs, int **mat) {
     }
 }
 
-void divideMatrices(unsigned char **component, int **dctCoefs, BMPINFOHEADER *infoHeader) {
+void divideMatrices(unsigned char **component, double **dctCoefs, BMPINFOHEADER *infoHeader) {
 
-    int **mat = NULL;
+    unsigned char **mat = NULL;
 
     mat = malloc(8 * sizeof(int *));
 
@@ -206,7 +224,7 @@ void divideMatrices(unsigned char **component, int **dctCoefs, BMPINFOHEADER *in
     free(mat);
 }
 
-void quantization(int **quantCoefs, int **dctCoefs) {
+void quantization(unsigned char **quantCoefs, double **dctCoefs) {
 
     int luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
                                 12, 12, 14, 19, 26, 58, 60, 55,
@@ -232,7 +250,7 @@ void quantization(int **quantCoefs, int **dctCoefs) {
     }
 }
 
-void vectorization(int vector[64], int **mat) {
+void vectorization(int vector[64], unsigned char **mat) {
 
     int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
     int steps = 0;        // Variable to avoid buffer overflow.
