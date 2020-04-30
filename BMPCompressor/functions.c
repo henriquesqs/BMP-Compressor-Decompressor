@@ -175,8 +175,8 @@ void dct(double **dctCoefs, unsigned char **mat) {
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
 
-            dctCoefs[i][j] = 0; // initializing matrix
             c1 = c2 = 1;        // default value of consts
+            dctCoefs[i][j] = 0; // initializing matrix
 
             if (i == 0)
                 c1 = (1 / sqrt(2));

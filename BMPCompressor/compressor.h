@@ -17,7 +17,7 @@ typedef struct BMPFILEHEADER BMPFILEHEADER; // BMP file header structure
 typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
 
 /*
-    Function responsible to return the width of the image
+    Function responsible for return the width of the image
     from its infoHeader struct.
 
     PARAMETERS:
@@ -28,7 +28,7 @@ typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
 int getWidth(BMPINFOHEADER *infoHeader);
 
 /*
-    Function responsible to return the Height of the image
+    Function responsible for return the Height of the image
     from its infoHeader struct.
 
     PARAMETERS:
@@ -94,7 +94,7 @@ void moveToBitmapData(FILE *file, BMPFILEHEADER *FH);
 void readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, unsigned char **G, unsigned char **B);
 
 /*
-    Function responsible to alloc unsigned char** matrices.
+    Function responsible for alloc unsigned char** matrices.
 
     PARAMETERS:
         - mat: matrix to alloc;
@@ -106,7 +106,7 @@ void readBitMapImage(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, u
 unsigned char **allocMatrix(unsigned char **mat, int rows, int cols);
 
 /*
-    Function responsible to alloc int matrices.
+    Function responsible for alloc int matrices.
 
     PARAMETERS:
         - mat: matrix to alloc;
@@ -118,7 +118,7 @@ unsigned char **allocMatrix(unsigned char **mat, int rows, int cols);
 int **allocIntMatrix(int **mat, int rows, int cols);
 
 /*
-    Function responsible to alloc double matrices.
+    Function responsible for alloc double matrices.
 
     PARAMETERS:
         - mat: matrix to alloc;
@@ -157,7 +157,7 @@ void freeMatrix(unsigned char **mat, int rows);
 void freeIntMatrix(int **mat, int rows);
 
 /*
-    Function responsible to separate the R, G, B componentes.
+    Function responsible for separate the R, G, B componentes.
 
     PARAMETERS:
         - file: pointer to the image file.
@@ -189,7 +189,7 @@ unsigned int imageDataSize(BMPINFOHEADER *infoHeader);
 int imageSize(BMPINFOHEADER *infoHeader);
 
 /*
-    Function responsible to do the division of our image into its components
+    Function responsible for do the division of our image into its components
     (R, G and B) which represents its channels.
 
     PARAMETERS:
@@ -212,7 +212,7 @@ void divideMatrices(unsigned char **component, double **dctCoefs, BMPINFOHEADER 
 void dct(double **dctCoefs, unsigned char **mat);
 
 /*
-    Function responsible to apply a level shift in double matrices.
+    Function responsible for apply a level shift in double matrices.
 
     PARAMETERS:
         - mat: matrix to apply level shift;
@@ -222,7 +222,7 @@ void dct(double **dctCoefs, unsigned char **mat);
 void levelShift(double **mat, int offBits);
 
 /*
-    Function responsible to apply quantization. It divides our coefficients matrix
+    Function responsible for apply quantization. It divides our coefficients matrix
     (dctCoefs) by a luminance table.
 
     PARAMETERS:
@@ -233,7 +233,7 @@ void levelShift(double **mat, int offBits);
 void quantization(unsigned char **quantCoefs, double **dctCoefs);
 
 /*
-    This function is responsible to apply vectorization on a matrix using zig-zag scan.
+    This function is responsible for apply vectorization on a matrix using zig-zag scan.
     This will helps in the next step as it puts zeros into the final of the vector.
 
     PARAMETERS:
@@ -242,6 +242,17 @@ void quantization(unsigned char **quantCoefs, double **dctCoefs);
 */
 void vectorization(int vector[64], unsigned char **mat);
 
+/*
+    Function responsible for converting from RGB channels to YCbCr.
+
+    PARAMETERS:
+        - R: matrix of R component;
+        - G: matrix of G component;
+        - B: matrix of B component;
+        - Y: matrix of Y component;
+        - Cb: matrix of Cb component;
+        - Cr: matrix of Cr component;
+*/
 void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, unsigned char **Y, unsigned char **Cb, unsigned char **Cr);
 
 #endif
