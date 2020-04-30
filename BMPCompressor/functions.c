@@ -151,21 +151,28 @@ void dct(int **dctCoefs, int **mat) {
         FOR GOD's SAKE WE NEED TO OPTIMIZE THIS PART OF THE CODE
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     */
-
-    double c1 = 1, c2 = 1;
+   
+    double c1, c2;
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
 
-            if (i == 0 && j == 0)
-                c1 = c2 = 1 / sqrt(2);
+            dctCoefs[i][j] = 0; // initializing matrix
+            c1 = c2 = 1; // default value of consts
 
-            for (int x = 0; x < 8; x++) {
-                for (int y = 0; y < 8; y++) {
+            if (i == 0)
+                c1 = (1 / sqrt(2));
 
-                    dctCoefs[i][j] = c1 * c2 * mat[x][y] * cos(((2 * x + 1) * i * PI) / 16) * cos(((2 * y + 1) * j * PI) / 16);
-                }
-            }
+            if (j == 0)
+                c2 = (1 / sqrt(2));
+
+            int aux = 0; // aux variable to store sum values
+
+            for (int x = 0; x < 8; x++) 
+                for (int y = 0; y < 8; y++) 
+                    aux += mat[x][y] * cos((2 * x + 1) * i * PI / 16) * cos((2 * y + 1) * j * PI / 16);
+
+            dctCoefs[i][j] = c1 * c2 * 1 / 4 * aux;
         }
     }
 }
