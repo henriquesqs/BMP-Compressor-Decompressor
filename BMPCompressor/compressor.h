@@ -198,7 +198,7 @@ int imageSize(BMPINFOHEADER *infoHeader);
         - infoHeader: struct with image infos.
     
 */
-void divideMatrices(unsigned char **component, double **dctCoefs, BMPINFOHEADER *infoHeader);
+void divideMatrices(double **component, double **dctCoefs, BMPINFOHEADER *infoHeader);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering 
@@ -209,7 +209,7 @@ void divideMatrices(unsigned char **component, double **dctCoefs, BMPINFOHEADER 
         - dctCoefs: matrix where we're going to store dct result;
         - mat: matrix with coeffs we're going to apply dct.
 */
-void dct(double **dctCoefs, unsigned char **mat);
+void dct(double **dctCoefs, double **mat);
 
 /*
     Function responsible for apply a level shift in double matrices.
@@ -230,7 +230,7 @@ void levelShift(double **mat, int offBits);
         - dctCoefs: matrix with dct coefficients.
 
 */
-void quantization(unsigned char **quantCoefs, double **dctCoefs);
+void quantization(double **quantCoefs, double **dctCoefs);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
@@ -240,7 +240,7 @@ void quantization(unsigned char **quantCoefs, double **dctCoefs);
         - vector: vector to store elements;
         - mat: matrix to apply vectorization.
 */
-void vectorization(int vector[64], unsigned char **mat);
+void vectorization(int vector[64], double **mat);
 
 /*
     Function responsible for converting from RGB channels to YCbCr.
@@ -253,6 +253,11 @@ void vectorization(int vector[64], unsigned char **mat);
         - Cb: matrix of Cb component;
         - Cr: matrix of Cr component;
 */
-void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, unsigned char **Y, unsigned char **Cb, unsigned char **Cr);
+void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr);
+
+/*
+    Auxiliar function to print a component (unsigned char**) given its height and width
+*/
+void printComponent(unsigned char **component, int height, int width);
 
 #endif

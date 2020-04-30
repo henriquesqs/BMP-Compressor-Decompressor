@@ -41,18 +41,13 @@ int main(int argc, char const *argv[]) {
 
     // Now we're going to convert from RGB to YCbCr to increase DCT performance.
 
-    unsigned char **Y = NULL, **Cb = NULL, **Cr = NULL;
+    double **Y = NULL, **Cb = NULL, **Cr = NULL;
 
-    Y = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cb = allocMatrix(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cr = allocMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+    Y = allocDoubleMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = allocDoubleMatrix(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = allocDoubleMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     rgbToYcbcr(R, G, B, Y, Cb, Cr);
-
-    if (DEBUG) {
-        long location = ftell(file);
-        printf("current location %ld and file's final location %ld\n", location, size);
-    }
 
     // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
     // at each 8x8 matrix, due to some researchs proving that this division increases the efficiency of DCT.
@@ -68,17 +63,18 @@ int main(int argc, char const *argv[]) {
     // Starting the quantization step. Here we're going to divide our DCT coefficients by
     // the quantization table so we can perform coefficients quantization.
 
-    unsigned char **quantCoefs = allocMatrix(quantCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
+    double **quantCoefs = allocDoubleMatrix(quantCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
     quantization(quantCoefs, dctCoefs);
 
     // On this step, we're going to apply vectorization using zig-zag scan. We do this to
     // make easier for us to compress the image by moving all the zero values to the end of the vector.
     // Its told that this step helps to increase run length encoding performance.
+
     int vector[64] = {};
     vectorization(vector, quantCoefs);
 
-    // // Free allocated memory.
+    // Free allocated memory.
     fclose(file);
     free(bmpFile);
     free(bmpInfo);
@@ -86,8 +82,11 @@ int main(int argc, char const *argv[]) {
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));
+    freeDoubleMatrix(Y, getHeight(bmpInfo));
+    freeDoubleMatrix(Cb, getHeight(bmpInfo));
+    freeDoubleMatrix(Cr, getHeight(bmpInfo));
     freeDoubleMatrix(dctCoefs, getHeight(bmpInfo));
-    freeMatrix(quantCoefs, getHeight(bmpInfo));
+    freeDoubleMatrix(quantCoefs, getHeight(bmpInfo));
 
     return SUCCESS;
 }

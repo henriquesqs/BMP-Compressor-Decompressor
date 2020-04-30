@@ -162,7 +162,7 @@ void levelShift(double **mat, int offBits) {
             mat[i][j] -= offBits;
 }
 
-void dct(double **dctCoefs, unsigned char **mat) {
+void dct(double **dctCoefs, double **mat) {
 
     /*  
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -195,23 +195,18 @@ void dct(double **dctCoefs, unsigned char **mat) {
     }
 }
 
-void divideMatrices(unsigned char **component, double **dctCoefs, BMPINFOHEADER *infoHeader) {
+void divideMatrices(double **component, double **dctCoefs, BMPINFOHEADER *infoHeader) {
 
-    unsigned char **mat = NULL;
-
-    mat = malloc(8 * sizeof(int *));
-
-    for (int i = 0; i < 8; i++)
-        mat[i] = malloc(8 * sizeof(int));
+    double **mat = NULL;
+    mat = allocDoubleMatrix(mat, 8, 8);
 
     for (int i = 0; i < infoHeader->biHeight / 8; i++) {
         for (int j = 0; j < infoHeader->biWidth / 8; j++) {
             for (int k = 0; k < 8; k++) {
                 for (int l = 0; l < 8; l++) {
 
-                    // We are just copying the 8x8 part of component matrix and applying
-                    // level shift below, which is said to increase the performance of DCT.
-
+                    // We are just copying a 8x8 part of component matrix to apply
+                    // dct in each 8x8 part in order to increase its performance.
                     mat[k][l] = component[i * 8 + k][j * 8 + l];
                 }
             }
@@ -219,21 +214,19 @@ void divideMatrices(unsigned char **component, double **dctCoefs, BMPINFOHEADER 
         }
     }
 
-    for (int i = 0; i < 8; i++)
-        free(mat[i]);
-    free(mat);
+    freeDoubleMatrix(mat, 8);
 }
 
-void quantization(unsigned char **quantCoefs, double **dctCoefs) {
+void quantization(double **quantCoefs, double **dctCoefs) {
 
-    int luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
-                                12, 12, 14, 19, 26, 58, 60, 55,
-                                14, 13, 16, 24, 40, 57, 69, 56,
-                                14, 17, 22, 29, 51, 87, 80, 62,
-                                18, 22, 37, 56, 68, 109, 103, 77,
-                                24, 35, 55, 64, 81, 104, 113, 92,
-                                49, 64, 78, 87, 103, 121, 120, 101,
-                                72, 92, 95, 98, 112, 100, 103, 99};
+    double luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
+                                   12, 12, 14, 19, 26, 58, 60, 55,
+                                   14, 13, 16, 24, 40, 57, 69, 56,
+                                   14, 17, 22, 29, 51, 87, 80, 62,
+                                   18, 22, 37, 56, 68, 109, 103, 77,
+                                   24, 35, 55, 64, 81, 104, 113, 92,
+                                   49, 64, 78, 87, 103, 121, 120, 101,
+                                   72, 92, 95, 98, 112, 100, 103, 99};
 
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
@@ -243,18 +236,18 @@ void quantization(unsigned char **quantCoefs, double **dctCoefs) {
         printf("quantizados\n");
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                printf("%d, ", quantCoefs[i][j]);
+                printf("%.f ", quantCoefs[i][j]);
             }
             printf("\n");
         }
     }
 }
 
-void vectorization(int vector[64], unsigned char **mat) {
+void vectorization(int vector[64], double **mat) {
 
     int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
     int steps = 0;        // Variable to avoid buffer overflow.
-    int lin = 0, col = 0; // Variables to control lines and col from int**.
+    int lin = 0, col = 0; // Variables to control lines and col from double**.
 
     vector[steps++] = mat[lin][col];
 
@@ -303,15 +296,27 @@ void vectorization(int vector[64], unsigned char **mat) {
     // }
 }
 
-void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, unsigned char **Y, unsigned char **Cb, unsigned char **Cr) {
+void printComponent(unsigned char **component, int height, int width) {
+
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            printf("%d ", component[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr) {
 
     double Kr = 0.299, Kb = 0.114;
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-            Y[i][j] = Kr * R[i][j] + (1 - Kb - Kr) * G[i][j] + Kb * B[i][j];
-            Cb[i][j] = (0.5 / (1 - Kb)) * (B[i][j] - Y[i][j]);
-            Cr[i][j] = (0.5 / (1 - Kr)) * (R[i][j] - Y[i][j]);
+
+            Y[i][j] = Kr * R[i][j] + (0.587) * G[i][j] + Kb * B[i][j];
+            Cb[i][j] = 0.564 * (B[i][j] - Y[i][j]);
+            Cr[i][j] = 0.713 * (R[i][j] - Y[i][j]);
         }
     }
 }
