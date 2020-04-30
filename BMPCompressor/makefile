@@ -1,4 +1,5 @@
 all:
+	
 	gcc -g -c compressor.c
 	gcc -g -c functions.c
 	gcc -g -o compressor.exe functions.c compressor.o -lm
@@ -7,3 +8,8 @@ all:
 # entering './compressor.exe' command on your terminal
 run:
 	./compressor.exe
+
+teste:
+	gcc -g -c teste.c
+	gcc -g -c functions.c
+	gcc -g -o teste.exe functions.c teste.o -lm
