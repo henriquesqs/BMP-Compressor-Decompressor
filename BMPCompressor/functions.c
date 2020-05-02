@@ -316,7 +316,7 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double 
     }
 }
 
-void runlength(int vector[64], FILE *file) {
+void runlength2(int vector[64], FILE *file) {
 
     short count = 0;
 
@@ -347,4 +347,35 @@ void runlength(int vector[64], FILE *file) {
     //     fread(&c2, sizeof(short), 1, file);
     //     printf("%d\n", c2);
     // }
+}
+
+void runlength(double** component, int height, int width, FILE *file) {
+
+    short count = 0;
+
+    // for (int i = 0; i < 64; i++) {
+
+    //     // Counting occurrences of current value avoiding buffer overflow.
+    //     count = 1;
+    //     while (i < 63 && vector[i] == vector[i + 1]) {
+    //         count++;
+    //         i++;
+    //     }
+
+    //     // When finds a different value, writes in file.
+    //     fwrite(&vector[i], sizeof(int), 1, file);
+    //     fwrite(&count, sizeof(short), 1, file);
+    // }
+
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            count = 1;
+            while(j < width-1 && component[i][j] == component[i][j+1]){
+                count++;
+                j++;
+            }
+            fwrite(&component[i][j], sizeof(double), 1, file);
+            fwrite(&count, sizeof(short), 1, file);
+        }
+    }
 }

@@ -267,6 +267,8 @@ void printComponent(unsigned char **component, int height, int width);
         - vector: vector with data to compress;
         - file: file to output compressed data.
 */
-void runlength(int vector[64], FILE *file);
+void runlength2(int vector[64], FILE *file);
+
+void runlength(double **component, int height, int width, FILE *file);
 
 #endif
