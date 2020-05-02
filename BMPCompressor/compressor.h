@@ -198,7 +198,7 @@ int imageSize(BMPINFOHEADER *infoHeader);
         - infoHeader: struct with image infos.
     
 */
-void divideMatrices(double **component, double **dctCoefs, BMPINFOHEADER *infoHeader);
+double** divideMatrices(double **component, double **dctCoefs, BMPINFOHEADER *infoHeader);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering 
@@ -209,7 +209,7 @@ void divideMatrices(double **component, double **dctCoefs, BMPINFOHEADER *infoHe
         - dctCoefs: matrix where we're going to store dct result;
         - mat: matrix with coeffs we're going to apply dct.
 */
-void dct(double **dctCoefs, double **mat);
+double** dct(double **dctCoefs, double **mat);
 
 /*
     Function responsible for apply a level shift in double matrices.
@@ -230,7 +230,7 @@ void levelShift(double **mat, int offBits);
         - dctCoefs: matrix with dct coefficients.
 
 */
-void quantization(double **quantCoefs, double **dctCoefs);
+double** quantization(double **quantCoefs, double **dctCoefs);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.

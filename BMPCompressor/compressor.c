@@ -16,12 +16,6 @@ int main(int argc, char const *argv[]) {
         return ERROR;
     }
 
-    if (DEBUG) {
-        fseek(file, 0, SEEK_END);
-        size = ftell(file);
-        rewind(file);
-    }
-
     // Reading the bmp file header and info header so we can read image data without troubles.
     if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
         return ERROR;
@@ -31,7 +25,7 @@ int main(int argc, char const *argv[]) {
 
     unsigned char **R = NULL, **G = NULL, **B = NULL; // We're going to split the RGB channels into these 3 matrices.
 
-    // Allocating enough memory to allocate the channels.
+    // Allocating enough memory to store R, G and B channels.
     R = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
     G = allocMatrix(G, getHeight(bmpInfo), getWidth(bmpInfo));
     B = allocMatrix(B, getHeight(bmpInfo), getWidth(bmpInfo));
@@ -40,7 +34,6 @@ int main(int argc, char const *argv[]) {
     separateComponents(file, bmpInfo, R, G, B);
 
     // Now we're going to convert from RGB to YCbCr to increase DCT performance.
-
     double **Y = NULL, **Cb = NULL, **Cr = NULL;
 
     Y = allocDoubleMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo));
@@ -51,33 +44,37 @@ int main(int argc, char const *argv[]) {
 
     // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
     // at each 8x8 matrix, due to some researchs proving that this division increases the efficiency of DCT.
-
     double **dctCoefs = allocDoubleMatrix(dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
     levelShift(dctCoefs, 128); // Applying level shift in order to increase DCT performance.
 
-    divideMatrices(Y, dctCoefs, bmpInfo);
-    divideMatrices(Cb, dctCoefs, bmpInfo);
-    divideMatrices(Cr, dctCoefs, bmpInfo);
+    Y = divideMatrices(Y, dctCoefs, bmpInfo);
+    Cb = divideMatrices(Cb, dctCoefs, bmpInfo);
+    Cr = divideMatrices(Cr, dctCoefs, bmpInfo);
 
     // Starting the quantization step. Here we're going to divide our DCT coefficients by
     // the quantization table so we can perform coefficients quantization.
-
     double **quantCoefs = allocDoubleMatrix(quantCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    quantization(quantCoefs, dctCoefs);
+    Y = quantization(quantCoefs, Y);
+    Cb = quantization(quantCoefs, Cb);
+    Cr = quantization(quantCoefs, Cr);
 
     // On this step, we're going to apply vectorization using zig-zag scan. We do this to
     // make easier for us to compress the image by moving all the zero values to the end of the vector.
     // Its told that this step helps to increase run-length encoding performance.
+    int vectorY[64] = {}, vectorCb[64] = {}, vectorCr[64] = {};
 
-    int vector[64] = {};
-    vectorization(vector, quantCoefs);
+    vectorization(vectorY, Y);
+    vectorization(vectorCb, Cb);
+    vectorization(vectorCr, Cr);
 
-    // Applying run-length encoding.
+    // Applying run-length encoding to each component (Y, Cb and Cr).
+    FILE *rleFile = fopen("compressed", "wb+");
 
-    FILE *rleFile = fopen("runlength", "wb+");
-    runlength(vector, rleFile);
+    runlength(vectorY, rleFile);
+    runlength(vectorCb, rleFile);
+    runlength(vectorCr, rleFile);
 
     // Free allocated memory.
     fclose(rleFile);

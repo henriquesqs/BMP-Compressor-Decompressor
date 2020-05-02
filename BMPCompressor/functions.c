@@ -162,7 +162,7 @@ void levelShift(double **mat, int offBits) {
             mat[i][j] -= offBits;
 }
 
-void dct(double **dctCoefs, double **mat) {
+double **dct(double **dctCoefs, double **mat) {
 
     /*  
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -193,9 +193,11 @@ void dct(double **dctCoefs, double **mat) {
             dctCoefs[i][j] = c1 * c2 * 1 / 4 * aux;
         }
     }
+
+    return dctCoefs;
 }
 
-void divideMatrices(double **component, double **dctCoefs, BMPINFOHEADER *infoHeader) {
+double **divideMatrices(double **component, double **dctCoefs, BMPINFOHEADER *infoHeader) {
 
     double **mat = NULL;
     mat = allocDoubleMatrix(mat, 8, 8);
@@ -210,14 +212,15 @@ void divideMatrices(double **component, double **dctCoefs, BMPINFOHEADER *infoHe
                     mat[k][l] = component[i * 8 + k][j * 8 + l];
                 }
             }
-            dct(dctCoefs, mat);
+            component = dct(dctCoefs, mat);
         }
     }
 
     freeDoubleMatrix(mat, 8);
+    return component;
 }
 
-void quantization(double **quantCoefs, double **dctCoefs) {
+double **quantization(double **quantCoefs, double **dctCoefs) {
 
     double luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
                                    12, 12, 14, 19, 26, 58, 60, 55,
@@ -232,15 +235,7 @@ void quantization(double **quantCoefs, double **dctCoefs) {
         for (int j = 0; j < 8; j++)
             quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
 
-    if (DEBUG) {
-        printf("quantizados\n");
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                printf("%.f ", quantCoefs[i][j]);
-            }
-            printf("\n");
-        }
-    }
+    return quantCoefs;
 }
 
 void vectorization(int vector[64], double **mat) {
@@ -321,7 +316,7 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double 
     }
 }
 
-void runlength(int vector[64], FILE* file) {
+void runlength(int vector[64], FILE *file) {
 
     short count = 0;
 
@@ -333,7 +328,7 @@ void runlength(int vector[64], FILE* file) {
             count++;
             i++;
         }
-        
+
         // When finds a different value, writes in file.
         fwrite(&vector[i], sizeof(int), 1, file);
         fwrite(&count, sizeof(short), 1, file);
