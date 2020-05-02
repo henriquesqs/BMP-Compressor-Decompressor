@@ -69,12 +69,18 @@ int main(int argc, char const *argv[]) {
 
     // On this step, we're going to apply vectorization using zig-zag scan. We do this to
     // make easier for us to compress the image by moving all the zero values to the end of the vector.
-    // Its told that this step helps to increase run length encoding performance.
+    // Its told that this step helps to increase run-length encoding performance.
 
     int vector[64] = {};
     vectorization(vector, quantCoefs);
 
+    // Applying run-length encoding.
+
+    FILE *rleFile = fopen("runlength", "wb+");
+    runlength(vector, rleFile);
+
     // Free allocated memory.
+    fclose(rleFile);
     fclose(file);
     free(bmpFile);
     free(bmpInfo);

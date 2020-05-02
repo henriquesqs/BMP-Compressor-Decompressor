@@ -234,7 +234,7 @@ void quantization(double **quantCoefs, double **dctCoefs);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
-    This will helps in the next step as it puts zeros into the final of the vector.
+    This will help on next step as it puts zeros vector ending.
 
     PARAMETERS:
         - vector: vector to store elements;
@@ -259,5 +259,14 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double 
     Auxiliar function to print a component (unsigned char**) given its height and width
 */
 void printComponent(unsigned char **component, int height, int width);
+
+/*
+    Function responsible for applying Run-Length Encondig (RLE), which is a technic to apply digital data compression.
+
+    PARAMETERS:
+        - vector: vector with data to compress;
+        - file: file to output compressed data.
+*/
+void runlength(int vector[64], FILE *file);
 
 #endif
