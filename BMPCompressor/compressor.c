@@ -9,7 +9,7 @@ int main(int argc, char const *argv[]) {
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
 
-    file = fopen("images/cachorro.bmp", "rb"); // Openning the image that we want to compress.
+    file = fopen("images/cachorro.bmp", "rb"); // Openning image that we want to compress.
 
     if (file == NULL) { // Checking if there was an error opening the image.
         printf("error reading file");
@@ -20,12 +20,11 @@ int main(int argc, char const *argv[]) {
     if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
         return ERROR;
 
-    // printf("alt: %d x lar: %d\n\n", getHeight(bmpInfo), getWidth(bmpInfo));
-
     // Moving our file pointer to the bitmap data region.
     moveToBitmapData(file, bmpFile);
-
-    unsigned char **R = NULL, **G = NULL, **B = NULL; // We're going to split the RGB channels into these 3 matrices.
+    
+    // We're going to split the RGB channels into these 3 matrices below:
+    unsigned char **R = NULL, **G = NULL, **B = NULL;
 
     // Allocating enough memory to store R, G and B channels.
     R = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
@@ -34,13 +33,6 @@ int main(int argc, char const *argv[]) {
 
     // Separates the bitmap data into its RGB components.
     separateComponents(file, bmpInfo, R, G, B);
-
-    // for (int i = 0; i < getHeight(bmpInfo); i++){
-    //     for (int j = 0; j < getWidth(bmpInfo); j++) {
-    //         printf("%d ", R[i][j]);
-    //     }
-    //     printf("\n");
-    // }
 
     // Now we're going to convert from RGB to YCbCr to increase DCT performance.
     float **Y = NULL, **Cb = NULL, **Cr = NULL;
@@ -51,46 +43,23 @@ int main(int argc, char const *argv[]) {
 
     rgbToYcbcr(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // for (int i = 0; i < getHeight(bmpInfo); i++) {
-    //     for (int j = 0; j < getWidth(bmpInfo); j++) {
-    //         printf("%.3f ", Y[i][j]);
-    //     }
-    //     printf("\n");
-    // }
-
     // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
     // at each 8x8 matrix, due to some researchs proving that this division increases the efficiency of DCT.
     float **dctCoefs = allocFloatMatrix(dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
     levelShift(dctCoefs, 128, getHeight(bmpInfo), getWidth(bmpInfo)); // Applying level shift in order to increase DCT performance.
 
-    // for (int i = 0; i < getHeight(bmpInfo); i++) {
-    //     for (int j = 0; j < getWidth(bmpInfo); j++) {
-    //         printf("%.f ", dctCoefs[i][j]);
-    //     }
-    //     printf("\n");
-    // }
-
-    // initDCT();
-
     Y = divideMatrices(Y, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
-    // Cb = divideMatrices(Cb, dctCoefs, bmpInfo);
-    // Cr = divideMatrices(Cr, dctCoefs, bmpInfo);
+    Cb = divideMatrices(Cb, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = divideMatrices(Cr, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // for (int i = 0; i < getHeight(bmpInfo); i++) {
-    //     for (int j = 0; j < getWidth(bmpInfo); j++) {
-    //         printf("%.3f ", Y[i][j]);
-    //     }
-    //     printf("\n");
-    // }
+    // Starting the quantization step. Here we're going to divide our DCT coefficients by
+    // the quantization table so we can perform coefficients quantization.
+    float **quantCoefs = allocFloatMatrix(quantCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // // Starting the quantization step. Here we're going to divide our DCT coefficients by
-    // // the quantization table so we can perform coefficients quantization.
-    // float **quantCoefs = allocFloatMatrix(quantCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
-
-    // Y = quantization(quantCoefs, Y);
-    // Cb = quantization(quantCoefs, Cb);
-    // Cr = quantization(quantCoefs, Cr);
+    Y = quantization(quantCoefs, Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = quantization(quantCoefs, Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = quantization(quantCoefs, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // printf("\n");
     // for (int i = 0; i < getHeight(bmpInfo); i++) {

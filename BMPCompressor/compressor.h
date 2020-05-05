@@ -11,14 +11,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 
 typedef struct BMPFILEHEADER BMPFILEHEADER; // BMP file header structure
 typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
-
-double COS[8][8], C[8];
-
-void initDCT();
 
 /*
     Function responsible for return the width of the image
@@ -255,7 +252,7 @@ void levelShift(float **mat, int offBits, int height, int width);
         - dctCoefs: matrix with dct coefficients.
 
 */
-float **quantization(float **quantCoefs, float **dctCoefs);
+float **quantization(float **quantCoefs, float **dctCoefs, int height, int width);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.

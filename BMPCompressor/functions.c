@@ -180,15 +180,7 @@ void levelShift(float **mat, int offBits, int height, int width) {
             mat[i][j] -= offBits;
 }
 
-float **dct(float **dctCoefs, float **mat, int k, int l) { //nao tinha q ser
-
-    // printf("\n");
-    // for (int i = 0; i < 8; i++) {
-    //     for (int j = 0; j < 8; j++) {
-    //         printf("%.f ", mat[i][j]);
-    //     }
-    //     printf("\n");
-    // }
+float **dct(float **dctCoefs, float **mat, int k, int l) {
 
     float c1, c2;
 
@@ -209,7 +201,7 @@ float **dct(float **dctCoefs, float **mat, int k, int l) { //nao tinha q ser
                 for (int y = 0; y < 8; y++)
 
                     // WARNING: we are storing a double value into a float matrix.
-                    // Due this projects purpouse, this should not be a problem.
+                    // Due to this projects purpouse, this should not be a problem.
                     aux += mat[x][y] * cos((2 * x + 1) * i * PI / 16) * cos((2 * y + 1) * j * PI / 16);
 
             dctCoefs[i][j] = c1 * c2 * 1 / 4 * aux;
@@ -220,13 +212,6 @@ float **dct(float **dctCoefs, float **mat, int k, int l) { //nao tinha q ser
 }
 
 float **divideMatrices(float **component, float **dctCoefs, int height, int width) {
-
-    // for (int i = 0; i < height; i++) {
-    //     for (int j = 0; j < width; j++) {
-    //         printf("%.f ", component[i][j]);
-    //     }
-    //     printf("\n");
-    // }
 
     // 'mat' will allocate each 8x8 piece of component
     float **mat = allocFloatMatrix(mat, 8, 8);
@@ -249,30 +234,28 @@ float **divideMatrices(float **component, float **dctCoefs, int height, int widt
 
             dct(dctCoefs, mat, k, l);
 
-            for (int m = k; (m % 8) != 0 ; m--) {
-                for (int n = l; (n % 8) != 0; n--) {
+            for (int m = 7; m >= 0 ; m--) {
+                for (int n = 7; n >= 0; n--) {
 
                     component[i * 8 + m][j * 8 + n] = dctCoefs[m][n];
                 }
             }
 
-            // component = dct(dctCoefs, mat);
         }
-        // printf("\n");
     }
 
     // for (int i = 0; i < height; i++) {
     //     for (int j = 0; j < width; j++) {
-    //         printf("%.f ", dctCoefs[i][j]);
+    //         printf("%.f ", component[i][j]);
     //     }
     //     printf("\n");
     // }
 
     freeFloatMatrix(mat, 8);
-    return dctCoefs;
+    return component;
 }
 
-float **quantization(float **quantCoefs, float **dctCoefs) {
+float **quantization(float **quantCoefs, float **dctCoefs, int height, int width) {
 
     float luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
                                   12, 12, 14, 19, 26, 58, 60, 55,
@@ -283,8 +266,8 @@ float **quantization(float **quantCoefs, float **dctCoefs) {
                                   49, 64, 78, 87, 103, 121, 120, 101,
                                   72, 92, 95, 98, 112, 100, 103, 99};
 
-    for (int i = 0; i < 8; i++)
-        for (int j = 0; j < 8; j++)
+    for (int i = 0; i < height; i++)
+        for (int j = 0; j < width; j++)
             quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
     // quantCoefs[i][j] = dctCoefs[i][j] / luminanceTable[i][j];
 
