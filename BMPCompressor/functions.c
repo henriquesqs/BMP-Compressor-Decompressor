@@ -261,12 +261,12 @@ float **divideMatrices(float **component, float **dctCoefs, int height, int widt
         // printf("\n");
     }
 
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            printf("%.f ", dctCoefs[i][j]);
-        }
-        printf("\n");
-    }
+    // for (int i = 0; i < height; i++) {
+    //     for (int j = 0; j < width; j++) {
+    //         printf("%.f ", dctCoefs[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 
     freeFloatMatrix(mat, 8);
     return dctCoefs;
