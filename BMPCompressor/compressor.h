@@ -16,6 +16,10 @@
 typedef struct BMPFILEHEADER BMPFILEHEADER; // BMP file header structure
 typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
 
+double COS[8][8], C[8];
+
+void initDCT();
+
 /*
     Function responsible for return the width of the image
     from its infoHeader struct.
@@ -130,6 +134,27 @@ int **allocIntMatrix(int **mat, int rows, int cols);
 double **allocDoubleMatrix(double **mat, int rows, int cols);
 
 /*
+    Function responsible for alloc float matrices.
+
+    PARAMETERS:
+        - mat: matrix to alloc;
+        - rows: number of rows to alloc;
+        - cols: number of columns to alloc.
+    
+    RETURNS allocated matrix.
+*/
+float **allocFloatMatrix(float **mat, int rows, int cols);
+
+/*
+    Function to free a float matrix, given its rows.
+
+    PARAMETERS:
+        - mat: matrix to free;
+        - rows: number of rows to free.
+*/
+void freeFloatMatrix(float **mat, int rows);
+
+/*
     Function to free a matrix, given its rows.
 
     PARAMETERS:
@@ -189,8 +214,7 @@ unsigned int imageDataSize(BMPINFOHEADER *infoHeader);
 int imageSize(BMPINFOHEADER *infoHeader);
 
 /*
-    Function responsible for do the division of our image into its components
-    (R, G and B) which represents its channels.
+    Function responsible for dividing our image into its components (R, G and B) which represents its channels.
 
     PARAMETERS:
         - component: component we want to divide;
@@ -198,18 +222,17 @@ int imageSize(BMPINFOHEADER *infoHeader);
         - infoHeader: struct with image infos.
     
 */
-double** divideMatrices(double **component, double **dctCoefs, BMPINFOHEADER *infoHeader);
+float **divideMatrices(float **component, float **dctCoefs, int height, int width);
 
 /*
-    Discrete cosine transform (DCT) is responsible for filtering 
-    high/low spatial frequencies regions. These regions are ready to be
-    compressed without any lose of image quality.
+    Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.
+    These regions are ready to be compressed without any lose of image quality.
 
     PARAMETERS:
         - dctCoefs: matrix where we're going to store dct result;
         - mat: matrix with coeffs we're going to apply dct.
 */
-double** dct(double **dctCoefs, double **mat);
+float **dct(float **dctCoefs, float **mat, int k, int l);
 
 /*
     Function responsible for apply a level shift in double matrices.
@@ -217,9 +240,11 @@ double** dct(double **dctCoefs, double **mat);
     PARAMETERS:
         - mat: matrix to apply level shift;
         - offBits: quantity of bits to shift.
+        - height: height of mat;
+        - width: width of mat.
 
 */
-void levelShift(double **mat, int offBits);
+void levelShift(float **mat, int offBits, int height, int width);
 
 /*
     Function responsible for apply quantization. It divides our coefficients matrix
@@ -230,7 +255,7 @@ void levelShift(double **mat, int offBits);
         - dctCoefs: matrix with dct coefficients.
 
 */
-double** quantization(double **quantCoefs, double **dctCoefs);
+float **quantization(float **quantCoefs, float **dctCoefs);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
@@ -240,7 +265,7 @@ double** quantization(double **quantCoefs, double **dctCoefs);
         - vector: vector to store elements;
         - mat: matrix to apply vectorization.
 */
-void vectorization(int vector[64], double **mat);
+void vectorization(int vector[64], float **mat);
 
 /*
     Function responsible for converting from RGB channels to YCbCr.
@@ -253,7 +278,7 @@ void vectorization(int vector[64], double **mat);
         - Cb: matrix of Cb component;
         - Cr: matrix of Cr component;
 */
-void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr);
+void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float **Y, float **Cb, float **Cr, int height, int width);
 
 /*
     Auxiliar function to print a component (unsigned char**) given its height and width

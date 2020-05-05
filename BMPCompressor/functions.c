@@ -120,6 +120,24 @@ double **allocDoubleMatrix(double **mat, int n, int m) {
     return mat;
 }
 
+float **allocFloatMatrix(float **mat, int n, int m) {
+
+    mat = malloc(n * sizeof(float *));
+
+    for (int i = 0; i < n; i++)
+        mat[i] = malloc(m * sizeof(float));
+
+    return mat;
+}
+
+void freeFloatMatrix(float **mat, int rows) {
+
+    for (int i = 0; i < rows; i++)
+        free(mat[i]);
+
+    free(mat);
+}
+
 void freeDoubleMatrix(double **mat, int rows) {
 
     for (int i = 0; i < rows; i++)
@@ -155,28 +173,29 @@ void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R
     }
 }
 
-void levelShift(double **mat, int offBits) {
+void levelShift(float **mat, int offBits, int height, int width) {
 
-    for (int i = 0; i < 8; i++)
-        for (int j = 0; j < 8; j++)
+    for (int i = 0; i < height; i++)
+        for (int j = 0; j < width; j++)
             mat[i][j] -= offBits;
 }
 
-double **dct(double **dctCoefs, double **mat) {
+float **dct(float **dctCoefs, float **mat, int k, int l) { //nao tinha q ser
 
-    /*  
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        FOR GOD's SAKE WE NEED TO OPTIMIZE THIS PART OF THE CODE
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    */
+    // printf("\n");
+    // for (int i = 0; i < 8; i++) {
+    //     for (int j = 0; j < 8; j++) {
+    //         printf("%.f ", mat[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 
-    double c1, c2;
+    float c1, c2;
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
 
-            c1 = c2 = 1;        // default value of consts
-            dctCoefs[i][j] = 0; // initializing matrix
+            c1 = c2 = 1; // default value of consts
 
             if (i == 0)
                 c1 = (1 / sqrt(2));
@@ -184,10 +203,13 @@ double **dct(double **dctCoefs, double **mat) {
             if (j == 0)
                 c2 = (1 / sqrt(2));
 
-            int aux = 0; // aux variable to store sum values
+            float aux = 0; // aux variable to store sum values
 
             for (int x = 0; x < 8; x++)
                 for (int y = 0; y < 8; y++)
+
+                    // WARNING: we are storing a double value into a float matrix.
+                    // Due this projects purpouse, this should not be a problem.
                     aux += mat[x][y] * cos((2 * x + 1) * i * PI / 16) * cos((2 * y + 1) * j * PI / 16);
 
             dctCoefs[i][j] = c1 * c2 * 1 / 4 * aux;
@@ -197,48 +219,79 @@ double **dct(double **dctCoefs, double **mat) {
     return dctCoefs;
 }
 
-double **divideMatrices(double **component, double **dctCoefs, BMPINFOHEADER *infoHeader) {
+float **divideMatrices(float **component, float **dctCoefs, int height, int width) {
 
-    double **mat = NULL;
-    mat = allocDoubleMatrix(mat, 8, 8);
+    // for (int i = 0; i < height; i++) {
+    //     for (int j = 0; j < width; j++) {
+    //         printf("%.f ", component[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 
-    for (int i = 0; i < infoHeader->biHeight / 8; i++) {
-        for (int j = 0; j < infoHeader->biWidth / 8; j++) {
-            for (int k = 0; k < 8; k++) {
-                for (int l = 0; l < 8; l++) {
+    // 'mat' will allocate each 8x8 piece of component
+    float **mat = allocFloatMatrix(mat, 8, 8);
+    int k = 0, l = 0;
 
-                    // We are just copying a 8x8 part of component matrix to apply
+    // On this next logical block, we are dividing 'component' into 8x8 matrices
+    // in order to apply dct into each one of them.
+
+    for (int i = 0; i < height / 8; i++) {
+        for (int j = 0; j < width / 8; j++) {
+
+            for (k = 0; k < 8; k++) {
+                for (l = 0; l < 8; l++) {
+
+                    // We are just copying a 8x8 part of 'component' matrix to apply
                     // dct in each 8x8 part in order to increase its performance.
                     mat[k][l] = component[i * 8 + k][j * 8 + l];
                 }
             }
-            component = dct(dctCoefs, mat);
+
+            dct(dctCoefs, mat, k, l);
+
+            for (int m = k; (m % 8) != 0 ; m--) {
+                for (int n = l; (n % 8) != 0; n--) {
+
+                    component[i * 8 + m][j * 8 + n] = dctCoefs[m][n];
+                }
+            }
+
+            // component = dct(dctCoefs, mat);
         }
+        // printf("\n");
     }
 
-    freeDoubleMatrix(mat, 8);
-    return component;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            printf("%.f ", dctCoefs[i][j]);
+        }
+        printf("\n");
+    }
+
+    freeFloatMatrix(mat, 8);
+    return dctCoefs;
 }
 
-double **quantization(double **quantCoefs, double **dctCoefs) {
+float **quantization(float **quantCoefs, float **dctCoefs) {
 
-    double luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
-                                   12, 12, 14, 19, 26, 58, 60, 55,
-                                   14, 13, 16, 24, 40, 57, 69, 56,
-                                   14, 17, 22, 29, 51, 87, 80, 62,
-                                   18, 22, 37, 56, 68, 109, 103, 77,
-                                   24, 35, 55, 64, 81, 104, 113, 92,
-                                   49, 64, 78, 87, 103, 121, 120, 101,
-                                   72, 92, 95, 98, 112, 100, 103, 99};
+    float luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
+                                  12, 12, 14, 19, 26, 58, 60, 55,
+                                  14, 13, 16, 24, 40, 57, 69, 56,
+                                  14, 17, 22, 29, 51, 87, 80, 62,
+                                  18, 22, 37, 56, 68, 109, 103, 77,
+                                  24, 35, 55, 64, 81, 104, 113, 92,
+                                  49, 64, 78, 87, 103, 121, 120, 101,
+                                  72, 92, 95, 98, 112, 100, 103, 99};
 
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
             quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
+    // quantCoefs[i][j] = dctCoefs[i][j] / luminanceTable[i][j];
 
     return quantCoefs;
 }
 
-void vectorization(int vector[64], double **mat) {
+void vectorization(int vector[64], float **mat) {
 
     int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
     int steps = 0;        // Variable to avoid buffer overflow.
@@ -302,12 +355,12 @@ void printComponent(unsigned char **component, int height, int width) {
     printf("\n");
 }
 
-void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr) {
+void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float **Y, float **Cb, float **Cr, int height, int width) {
 
-    double Kr = 0.299, Kb = 0.114;
+    float Kr = 0.299, Kb = 0.114;
 
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
 
             Y[i][j] = Kr * R[i][j] + (0.587) * G[i][j] + Kb * B[i][j];
             Cb[i][j] = 0.564 * (B[i][j] - Y[i][j]);
@@ -349,7 +402,7 @@ void runlength2(int vector[64], FILE *file) {
     // }
 }
 
-void runlength(double** component, int height, int width, FILE *file) {
+void runlength(double **component, int height, int width, FILE *file) {
 
     short count = 0;
 
@@ -367,10 +420,10 @@ void runlength(double** component, int height, int width, FILE *file) {
     //     fwrite(&count, sizeof(short), 1, file);
     // }
 
-    for(int i = 0; i < height; i++){
-        for(int j = 0; j < width; j++){
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
             count = 1;
-            while(j < width-1 && component[i][j] == component[i][j+1]){
+            while (j < width - 1 && component[i][j] == component[i][j + 1]) {
                 count++;
                 j++;
             }
