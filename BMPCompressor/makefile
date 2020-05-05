@@ -5,7 +5,7 @@ all:
 	gcc -g -o compressor functions.c compressor.o -lm
 
 # For some reason maybe the 'make run' command will not work. Please, run manually by 
-# entering './compressor.exe' command on your terminal
+# entering './compressor' command on your terminal
 run:
 
 	./compressor
