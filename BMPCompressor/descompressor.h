@@ -1,0 +1,4 @@
+#ifndef DESCOMPRESSOR_H
+#define DESCOMPRESSOR_H
+
+#endif
