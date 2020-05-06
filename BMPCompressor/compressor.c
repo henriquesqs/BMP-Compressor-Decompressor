@@ -60,7 +60,7 @@ int main(int argc, char const *argv[]) {
     fclose(compressed);
 
     /* INÍCIO DA PARTE DA DES   COMPRESSÃO */
-    descompressor(bmpInfo, compressed, auxY, auxCb, 0);
+    // descompressor(bmpInfo, compressed, auxY, auxCb, 0);
 
     // Free allocated memory.
     fclose(file);

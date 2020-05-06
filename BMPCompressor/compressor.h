@@ -304,7 +304,11 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file);
 
 /*
     Function responsible for calling all the methods to do image compress.
+
+    PAREMETERS:
+        - auxY: auxiliar variable to stores where Y component (from YCbCr) will ends in compressed file;
+        - auxCb: auxiliar variable to stores where Cb component (from YCbCr) will ends in compressed file;
 */
-int compress();
+int compress(long int *auxY, long int *auxCb);
 
 #endif

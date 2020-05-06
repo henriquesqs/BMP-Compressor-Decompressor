@@ -11,8 +11,8 @@
         - auxCb: aux variable responsible for storing where Cb component ends in file;
         - auxCr: aux variable responsible for storing where Cr component ends in file.
 */
-void descompressor(BMPINFOHEADER* infoHeader, FILE* file, long int auxY, long int auxCb, long int auxCr);
+int descompressor(BMPINFOHEADER* infoHeader, FILE* file, long int* auxY, long int* auxCb);
 
-float** runlengthDescomp(int height, int width, FILE* file, long int aux);
+float** runlengthDescomp(int height, int width, FILE* file, long int* aux);
 
 #endif

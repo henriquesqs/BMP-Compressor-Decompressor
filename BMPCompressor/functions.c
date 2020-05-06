@@ -432,7 +432,7 @@ void runlength(double **component, int height, int width, FILE *file) {
     }
 }
 
-int compress(){
+int compress(long int* auxY, long int* auxCb){
 
     FILE *file = NULL;
     char fileName[51];
@@ -440,7 +440,9 @@ int compress(){
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
 
-    printf("\nEnter image file name with bmp extension (for example: file.bmp) and max of 50 characters: ");
+    printf("\nEnter image file name with bmp extension (for example: file.bmp) and max of 50 characters.\n");
+    printf("\nATTENTION!!! Please, read this before entering your image file name:\n\n- If your image is in images folder, please, type: images/nameOfImage.bmp\n- Otherwise, type nameOfImage.bmp\n");
+    printf("\nYour image file name: ");
     scanf("%50s", fileName);
 
     // file = fopen("images/8x8.bmp", "rb"); // Openning image that we want to compress.
@@ -451,9 +453,13 @@ int compress(){
         return ERROR;
     }
 
+    printf("\nReading image metadata...\n");
+
     // Reading the bmp file header and info header so we can read image data without troubles.
     if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
         return ERROR;
+
+    printf("Starting compression, please wait...\n");
 
     // Moving our file pointer to the bitmap data region.
     moveToBitmapData(file, bmpFile);
@@ -483,13 +489,12 @@ int compress(){
     // division increases the efficiency of these steps.
 
     FILE *compressed = fopen("compressed.bin", "wb+"); // File to save compressed image
-    long int auxY, auxCb;                              // aux variables to store where which component ends
 
     Y = divideMatrices(compressed, Y, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
-    auxY = ftell(compressed);
+    auxY[0] = ftell(compressed);
 
     Cb = divideMatrices(compressed, Cb, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
-    auxCb = ftell(compressed);
+    auxCb[0] = ftell(compressed);
 
     Cr = divideMatrices(compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
 
@@ -514,12 +519,12 @@ int compress(){
 
 // Below, functions used to create our descompressor
 
-float **runlengthDescomp(int height, int width, FILE *file, long int aux) {
+float **runlengthDescomp(int height, int width, FILE *file, long int* aux) {
 
     int counter = 0, times, value, x, y;
     int **component = allocIntMatrix(component, height, width);
 
-    while (counter < aux && !feof(file)) {
+    while (counter < aux[0] && !feof(file)) {
 
         fread(&value, sizeof(int), 1, file);
         fread(&times, sizeof(int), 1, file);
@@ -540,10 +545,33 @@ float **runlengthDescomp(int height, int width, FILE *file, long int aux) {
     }
 }
 
-void descompressor(BMPINFOHEADER *infoHeader, FILE *compressed, long int auxY, long int auxCb, long int auxCr) {
+int descompressor(BMPINFOHEADER *infoHeader, FILE *compressed, long int* auxY, long int* auxCb) {
+
+    FILE *file = NULL;
+    char fileName[51];
+
+    BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
+    BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
+
+    printf("\nEnter image file name with bmp extension (for example: file.bmp) and max of 50 characters: ");
+    scanf("%50s", fileName);
+
+    file = fopen(fileName, "rb"); // Openning image that we want to descompress.
+
+    if (file == NULL) { // Checking if there was an error opening the image.
+        printf("\nError reading file. Did you enter its correct name?");
+        return ERROR;
+    }
+
+    // Reading the bmp file header and info header so we can read image data without troubles.
+    if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
+        return ERROR;
 
     // Jumping to image data region
-    fseek(compressed, 54, SEEK_SET);
+    // fseek(compressed, 54, SEEK_SET);
+
+    // Moving our file pointer to the bitmap data region.
+    moveToBitmapData(file, bmpFile);
 
     runlengthDescomp(getHeight(infoHeader), getWidth(infoHeader), compressed, auxY);
 }
