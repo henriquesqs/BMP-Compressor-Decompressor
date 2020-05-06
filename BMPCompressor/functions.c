@@ -1,3 +1,6 @@
+
+// Below, all the functions used to create our BMP compressor
+
 #include "compressor.h"
 
 struct BMPFILEHEADER {
@@ -439,3 +442,7 @@ void runlength(double **component, int height, int width, FILE *file) {
         }
     }
 }
+
+// Below, functions used to create our descompressor
+
+#include "descompressor.h"
