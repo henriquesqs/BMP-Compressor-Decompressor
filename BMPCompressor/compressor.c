@@ -44,35 +44,28 @@ int main(int argc, char const *argv[]) {
     rgbToYcbcr(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
-    // at each 8x8 matrix, due to some researchs proving that this division increases the efficiency of DCT.
+    // apply quantization and vectorization steps at each 8x8 matrix, due to some researchs proving that this 
+    // division increases the efficiency of these steps.
+
     float **dctCoefs = allocFloatMatrix(dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
     levelShift(dctCoefs, 128, getHeight(bmpInfo), getWidth(bmpInfo)); // Applying level shift in order to increase DCT performance.
 
     Y = divideMatrices(Y, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cb = divideMatrices(Cb, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cr = divideMatrices(Cr, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
+    // Cb = divideMatrices(Cb, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
+    // Cr = divideMatrices(Cr, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // Starting the quantization step. Here we're going to divide our DCT coefficients by
-    // the quantization table so we can perform coefficients quantization.
-    float **quantCoefs = allocFloatMatrix(quantCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
-
-    Y = quantization(quantCoefs, Y, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cb = quantization(quantCoefs, Cb, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cr = quantization(quantCoefs, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
-
-    // printf("\n");
     // for (int i = 0; i < getHeight(bmpInfo); i++) {
     //     for (int j = 0; j < getWidth(bmpInfo); j++) {
-    //         printf("%.3f ", Y[i][j]);
+    //         printf("%f ", Y[i][j]);
     //     }
     //     printf("\n");
     // }
 
-    // // On this step, we're going to apply vectorization using zig-zag scan. We do this to
-    // // make easier for us to compress the image by moving all the zero values to the end of the vector.
-    // // Its told that this step helps to increase run-length encoding performance.
-    // // int vectorY[64] = {}, vectorCb[64] = {}, vectorCr[64] = {};
+    // On this step, we're going to apply vectorization using zig-zag scan. We do this to
+    // make easier for us to compress the image by moving all the zero values to the end of the vector.
+    // Its told that this step helps to increase run-length encoding performance.
+    // int vectorY[64] = {}, vectorCb[64] = {}, vectorCr[64] = {};
 
     // // vectorization(vectorY, Y);
     // // vectorization(vectorCb, Cb);
@@ -89,20 +82,18 @@ int main(int argc, char const *argv[]) {
     // runlength(Cb, getHeight(bmpInfo), getWidth(bmpInfo), rleFile);
     // runlength(Cr, getHeight(bmpInfo), getWidth(bmpInfo), rleFile);
 
-    // // Free allocated memory.
-    // fclose(rleFile);
-    // fclose(file);
-    // free(bmpFile);
-    // free(bmpInfo);
-    // free(bmpImage);
-    // freeMatrix(R, getHeight(bmpInfo));
-    // freeMatrix(G, getHeight(bmpInfo));
-    // freeMatrix(B, getHeight(bmpInfo));
-    // freeDoubleMatrix(Y, getHeight(bmpInfo));
-    // freeDoubleMatrix(Cb, getHeight(bmpInfo));
-    // freeDoubleMatrix(Cr, getHeight(bmpInfo));
-    // freeDoubleMatrix(dctCoefs, getHeight(bmpInfo));
-    // freeDoubleMatrix(quantCoefs, getHeight(bmpInfo));
+    // Free allocated memory.
+    fclose(file);
+    free(bmpFile);
+    free(bmpInfo);
+    free(bmpImage);
+    freeMatrix(R, getHeight(bmpInfo));
+    freeMatrix(G, getHeight(bmpInfo));
+    freeMatrix(B, getHeight(bmpInfo));
+    freeFloatMatrix(Y, getHeight(bmpInfo));
+    freeFloatMatrix(Cb, getHeight(bmpInfo));
+    freeFloatMatrix(Cr, getHeight(bmpInfo));
+    freeFloatMatrix(dctCoefs, getHeight(bmpInfo));
 
     return SUCCESS;
 }

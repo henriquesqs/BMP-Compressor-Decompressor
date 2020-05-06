@@ -213,9 +213,10 @@ float **dct(float **dctCoefs, float **mat, int k, int l) {
 
 float **divideMatrices(float **component, float **dctCoefs, int height, int width) {
 
-    // 'mat' will allocate each 8x8 piece of component
-    float **mat = allocFloatMatrix(mat, 8, 8);
+    float **mat = allocFloatMatrix(mat, 8, 8); // 'mat' will allocate each 8x8 piece of component
+    int *vector = malloc(64 * sizeof(int));
     int k = 0, l = 0;
+    FILE *rleFile;
 
     // On this next logical block, we are dividing 'component' into 8x8 matrices
     // in order to apply dct into each one of them.
@@ -233,29 +234,35 @@ float **divideMatrices(float **component, float **dctCoefs, int height, int widt
             }
 
             dct(dctCoefs, mat, k, l);
+            quantization(dctCoefs);
 
-            for (int m = 7; m >= 0 ; m--) {
+            // On this step, we're going to apply vectorization using zig-zag scan. We do this to
+            // make easier for us to compress the image by moving all the zero values to the end of the vector.
+            // Its told that this step helps to increase run-length encoding performance.
+
+            vectorization(vector, dctCoefs);
+
+            for (int m = 7; m >= 0; m--) {
                 for (int n = 7; n >= 0; n--) {
 
                     component[i * 8 + m][j * 8 + n] = dctCoefs[m][n];
                 }
             }
 
+            // Applying run-length to quantified vector
+            rleFile = fopen("compressed.bin", "wb+");
+
+            runlength2(vector, rleFile);
+            fclose(rleFile);
         }
     }
 
-    // for (int i = 0; i < height; i++) {
-    //     for (int j = 0; j < width; j++) {
-    //         printf("%.f ", component[i][j]);
-    //     }
-    //     printf("\n");
-    // }
-
     freeFloatMatrix(mat, 8);
+    free(vector);
     return component;
 }
 
-float **quantization(float **quantCoefs, float **dctCoefs, int height, int width) {
+float **quantization(float **component) {
 
     float luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
                                   12, 12, 14, 19, 26, 58, 60, 55,
@@ -266,15 +273,17 @@ float **quantization(float **quantCoefs, float **dctCoefs, int height, int width
                                   49, 64, 78, 87, 103, 121, 120, 101,
                                   72, 92, 95, 98, 112, 100, 103, 99};
 
-    for (int i = 0; i < height; i++)
-        for (int j = 0; j < width; j++)
-            quantCoefs[i][j] = round(dctCoefs[i][j] / luminanceTable[i][j]);
+    float **quantCoefs = allocFloatMatrix(quantCoefs, 8, 8);
+
+    for (int i = 0; i < 8; i++)
+        for (int j = 0; j < 8; j++)
+            quantCoefs[i][j] = round(component[i][j] / luminanceTable[i][j]);
     // quantCoefs[i][j] = dctCoefs[i][j] / luminanceTable[i][j];
 
     return quantCoefs;
 }
 
-void vectorization(int vector[64], float **mat) {
+void vectorization(int* vector, float **mat) {
 
     int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
     int steps = 0;        // Variable to avoid buffer overflow.
@@ -352,7 +361,7 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float *
     }
 }
 
-void runlength2(int vector[64], FILE *file) {
+void runlength2(int* vector, FILE *file) {
 
     short count = 0;
 
@@ -369,20 +378,6 @@ void runlength2(int vector[64], FILE *file) {
         fwrite(&vector[i], sizeof(int), 1, file);
         fwrite(&count, sizeof(short), 1, file);
     }
-
-    // Moving our pointer to beggining of file* in order to read
-    // it's content.
-    rewind(file);
-
-    // int c;
-    // short c2;
-    // while(!feof(file)){
-
-    //     fread(&c, sizeof(int), 1, file);
-    //     printf("%d ", c);
-    //     fread(&c2, sizeof(short), 1, file);
-    //     printf("%d\n", c2);
-    // }
 }
 
 void runlength(double **component, int height, int width, FILE *file) {

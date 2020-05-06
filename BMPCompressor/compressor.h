@@ -248,11 +248,10 @@ void levelShift(float **mat, int offBits, int height, int width);
     (dctCoefs) by a luminance table.
 
     PARAMETERS:
-        - quantCoefs: matrix to store quantized coefficients;
-        - dctCoefs: matrix with dct coefficients.
+        - component: matrix with dct coefficients;
 
 */
-float **quantization(float **quantCoefs, float **dctCoefs, int height, int width);
+float **quantization(float **component);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
@@ -262,7 +261,7 @@ float **quantization(float **quantCoefs, float **dctCoefs, int height, int width
         - vector: vector to store elements;
         - mat: matrix to apply vectorization.
 */
-void vectorization(int vector[64], float **mat);
+void vectorization(int* vector, float **mat);
 
 /*
     Function responsible for converting from RGB channels to YCbCr.
@@ -289,7 +288,7 @@ void printComponent(unsigned char **component, int height, int width);
         - vector: vector with data to compress;
         - file: file to output compressed data.
 */
-void runlength2(int vector[64], FILE *file);
+void runlength2(int* vector, FILE *file);
 
 void runlength(double **component, int height, int width, FILE *file);
 
