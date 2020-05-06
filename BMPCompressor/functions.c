@@ -52,6 +52,19 @@ int imageSize(BMPINFOHEADER *infoHeader) {
     return (infoHeader->biHeight * infoHeader->biWidth);
 }
 
+long int fileSize(FILE *file) {
+
+    long int position = ftell(file);
+
+    fseek(file, 0, SEEK_END);
+
+    long int size = ftell(file);
+
+    fseek(file, position, SEEK_SET);
+
+    return size;
+}
+
 int readBMPFileHeader(FILE *file, BMPFILEHEADER *FH) {
 
     fread(&FH->bfType, sizeof(unsigned short), 1, file);
@@ -432,7 +445,7 @@ void runlength(double **component, int height, int width, FILE *file) {
     }
 }
 
-int compress(long int* auxY, long int* auxCb){
+int compress(long int *auxY, long int *auxCb, double *compressRate) {
 
     FILE *file = NULL;
     char fileName[51];
@@ -497,16 +510,15 @@ int compress(long int* auxY, long int* auxCb){
     auxCb[0] = ftell(compressed);
 
     Cr = divideMatrices(compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
-
-    fclose(compressed);
-
-    /* INÍCIO DA PARTE DA DES   COMPRESSÃO */
-    // descompressor(bmpInfo, compressed, auxY, auxCb, 0);
+    
+    // Calculating compressRate
+    compressRate[0] = (100 - (100 * ((double)fileSize(compressed) / (double)fileSize(file))));
 
     // Free allocated memory.
     fclose(file);
     free(bmpFile);
     free(bmpInfo);
+    fclose(compressed);
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));
@@ -519,7 +531,7 @@ int compress(long int* auxY, long int* auxCb){
 
 // Below, functions used to create our descompressor
 
-float **runlengthDescomp(int height, int width, FILE *file, long int* aux) {
+float **runlengthDescomp(int height, int width, FILE *file, long int *aux) {
 
     int counter = 0, times, value, x, y;
     int **component = allocIntMatrix(component, height, width);
@@ -545,7 +557,7 @@ float **runlengthDescomp(int height, int width, FILE *file, long int* aux) {
     }
 }
 
-int descompressor(BMPINFOHEADER *infoHeader, FILE *compressed, long int* auxY, long int* auxCb) {
+int descompressor(BMPINFOHEADER *infoHeader, FILE *compressed, long int *auxY, long int *auxCb) {
 
     FILE *file = NULL;
     char fileName[51];

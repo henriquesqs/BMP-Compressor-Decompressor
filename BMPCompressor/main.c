@@ -22,12 +22,13 @@ void menu(int invalid) {
 
 int main(int argc, char const *argv[]) {
 
-    int error = 0;       // variable to control functions errors return.
     int option;      // variable to store users option.
+    int error = 0;   // variable to control functions errors return.
     double duration; // variable to store duration of compression and descompression functions.
 
-    long int *auxY = malloc(1 * sizeof(long int));  // variable to auxiliate in descompression
-    long int *auxCb = malloc(1 * sizeof(long int)); // variable to auxiliate in descompression
+    double *compressRate = malloc(sizeof(double));  // variable to stores compression rate.
+    long int *auxY = malloc(1 * sizeof(long int));  // variable to auxiliate in descompression.
+    long int *auxCb = malloc(1 * sizeof(long int)); // variable to auxiliate in descompression.
 
     clock_t timeBefore, timeAfter; // variables to control compression and descompression running time.
 
@@ -46,10 +47,11 @@ int main(int argc, char const *argv[]) {
             timeBefore = clock(); // saving time before starting image compression
 
             // If everything went right during compression, calculates its duration.
-            if (compress(auxY, auxCb) > 0) {
+            if (compress(auxY, auxCb, compressRate) > 0) {
                 timeAfter = clock() - timeBefore;                     // saving time after starting image compression
                 duration = (timeAfter - timeBefore) / CLOCKS_PER_SEC; // calculating duration of compression process
-                printf("\nImage successfully compressed in %.3lf seconds!\n", duration);
+
+                printf("\nImage successfully compressed in %.3lf seconds with a compress rate of %.lf percent!\n", duration, compressRate[0]);
                 printf("The resulting file (compressed.bin) is located at the root of this project.\n");
             }
 
@@ -84,6 +86,10 @@ int main(int argc, char const *argv[]) {
         printf("\nThanks for using our services! Have a nice day =)\n");
     else
         printf("\n\nSorry for this...\nIf this error persists, contact us by our github accounts: @henriquesqs or @DennisLemkeGreen\n");
+
+    free(compressRate);
+    free(auxY);
+    free(auxCb);
 
     return SUCCESS;
 }

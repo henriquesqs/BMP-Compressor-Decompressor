@@ -211,6 +211,17 @@ unsigned int imageDataSize(BMPINFOHEADER *infoHeader);
 int imageSize(BMPINFOHEADER *infoHeader);
 
 /*
+    Calculates size of a file;
+
+    PARAMETERS:
+        - file: pointer to file to calculates its size.
+    
+    RETURNS size of file.
+
+*/
+long int fileSize(FILE *file);
+
+/*
     Function responsible for dividing our image into its components (R, G and B) which represents its channels.
 
     PARAMETERS:
@@ -309,6 +320,6 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file);
         - auxY: auxiliar variable to stores where Y component (from YCbCr) will ends in compressed file;
         - auxCb: auxiliar variable to stores where Cb component (from YCbCr) will ends in compressed file;
 */
-int compress(long int *auxY, long int *auxCb);
+int compress(long int *auxY, long int *auxCb, double *compressRate);
 
 #endif
