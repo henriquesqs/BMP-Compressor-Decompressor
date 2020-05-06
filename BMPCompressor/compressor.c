@@ -9,7 +9,7 @@ int main(int argc, char const *argv[]) {
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
 
-    file = fopen("images/cachorro.bmp", "rb"); // Openning image that we want to compress.
+    file = fopen("images/8x8.bmp", "rb"); // Openning image that we want to compress.
 
     if (file == NULL) { // Checking if there was an error opening the image.
         printf("error reading file");
@@ -51,9 +51,9 @@ int main(int argc, char const *argv[]) {
 
     levelShift(dctCoefs, 128, getHeight(bmpInfo), getWidth(bmpInfo)); // Applying level shift in order to increase DCT performance.
 
-    Y = divideMatrices(Y, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
-    // Cb = divideMatrices(Cb, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
-    // Cr = divideMatrices(Cr, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
+    Y = divideMatrices(Y, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo), file);
+    Cb = divideMatrices(Cb, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo), file);
+    Cr = divideMatrices(Cr, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo), file);
 
     // for (int i = 0; i < getHeight(bmpInfo); i++) {
     //     for (int j = 0; j < getWidth(bmpInfo); j++) {

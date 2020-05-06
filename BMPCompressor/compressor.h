@@ -219,7 +219,7 @@ int imageSize(BMPINFOHEADER *infoHeader);
         - infoHeader: struct with image infos.
     
 */
-float **divideMatrices(float **component, float **dctCoefs, int height, int width);
+float **divideMatrices(float **component, float **dctCoefs, int height, int width, FILE* file);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.

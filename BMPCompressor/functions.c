@@ -211,12 +211,12 @@ float **dct(float **dctCoefs, float **mat, int k, int l) {
     return dctCoefs;
 }
 
-float **divideMatrices(float **component, float **dctCoefs, int height, int width) {
+float **divideMatrices(float **component, float **dctCoefs, int height, int width, FILE *file) {
 
-    float **mat = allocFloatMatrix(mat, 8, 8); // 'mat' will allocate each 8x8 piece of component
-    int *vector = malloc(64 * sizeof(int));
-    int k = 0, l = 0;
     FILE *rleFile;
+    int k = 0, l = 0;
+    int *vector = malloc(64 * sizeof(int));
+    float **mat = allocFloatMatrix(mat, 8, 8); // 'mat' will allocate each 8x8 piece of component
 
     // On this next logical block, we are dividing 'component' into 8x8 matrices
     // in order to apply dct into each one of them.
@@ -249,10 +249,18 @@ float **divideMatrices(float **component, float **dctCoefs, int height, int widt
                 }
             }
 
-            // Applying run-length to quantified vector
+            // Escrevendo cabecalho da imagem original no arquivo comprimido;
             rleFile = fopen("compressed.bin", "wb+");
 
+            fseek(file, 0, SEEK_SET);
+
+            for (int o = 0; o < 54; o++)
+                fputc(fgetc(file), rleFile);
+
+            // Applying run-length to quantified vector
+
             runlength2(vector, rleFile);
+
             fclose(rleFile);
         }
     }
@@ -283,7 +291,7 @@ float **quantization(float **component) {
     return quantCoefs;
 }
 
-void vectorization(int* vector, float **mat) {
+void vectorization(int *vector, float **mat) {
 
     int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
     int steps = 0;        // Variable to avoid buffer overflow.
@@ -361,7 +369,7 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float *
     }
 }
 
-void runlength2(int* vector, FILE *file) {
+void runlength2(int *vector, FILE *file) {
 
     short count = 0;
 
