@@ -211,12 +211,15 @@ float **dct(float **dctCoefs, float **mat, int k, int l) {
     return dctCoefs;
 }
 
-float **divideMatrices(float **component, float **dctCoefs, int height, int width, FILE *file) {
+float **divideMatrices(FILE* compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH) {
 
-    FILE *rleFile;
-    int k = 0, l = 0;
-    int *vector = malloc(64 * sizeof(int));
-    float **mat = allocFloatMatrix(mat, 8, 8); // 'mat' will allocate each 8x8 piece of component
+    int k = 0, l = 0;                                             // aux variables to divide a matrix into 8x8 pieces
+    int *vector = malloc(64 * sizeof(int));                       // 'vector' will be used to store values after vectorization
+    float **mat = allocFloatMatrix(mat, 8, 8);                    // 'mat' will allocate each 8x8 piece of component
+    float **dctCoefs = allocFloatMatrix(dctCoefs, height, width); // 'dctCoefs' will temporally allocate values after dct
+
+    // Applying level shift in dctCoefs in order to increase DCT performance.
+    levelShift(dctCoefs, 128, height, width);
 
     // On this next logical block, we are dividing 'component' into 8x8 matrices
     // in order to apply dct into each one of them.
@@ -242,31 +245,26 @@ float **divideMatrices(float **component, float **dctCoefs, int height, int widt
 
             vectorization(vector, dctCoefs);
 
-            for (int m = 7; m >= 0; m--) {
-                for (int n = 7; n >= 0; n--) {
+            // for (int m = 7; m >= 0; m--) {
+            //     for (int n = 7; n >= 0; n--) {
 
-                    component[i * 8 + m][j * 8 + n] = dctCoefs[m][n];
-                }
-            }
+            //         component[i * 8 + m][j * 8 + n] = dctCoefs[m][n];
+            //     }
+            // }
 
-            // Escrevendo cabecalho da imagem original no arquivo comprimido;
-            rleFile = fopen("compressed.bin", "wb+");
-
-            fseek(file, 0, SEEK_SET);
-
-            for (int o = 0; o < 54; o++)
-                fputc(fgetc(file), rleFile);
+            // Writing header from image before its compression.
+            writeHeaders(FH, IH, compressed);
 
             // Applying run-length to quantified vector
-
-            runlength2(vector, rleFile);
-
-            fclose(rleFile);
+            runlength2(vector, compressed);
+            
         }
     }
 
-    freeFloatMatrix(mat, 8);
     free(vector);
+    freeFloatMatrix(mat, 8);
+    freeFloatMatrix(dctCoefs, height);
+    
     return component;
 }
 
@@ -367,6 +365,29 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float *
             Cr[i][j] = 0.713 * (R[i][j] - Y[i][j]);
         }
     }
+}
+
+void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file) {
+
+    // Writing File Header data
+    fwrite(&FH->bfType, sizeof(unsigned short), 1, file);
+    fwrite(&FH->bfSize, sizeof(unsigned int), 1, file);
+    fwrite(&FH->bfReserved1, sizeof(unsigned short), 1, file);
+    fwrite(&FH->bfReserved2, sizeof(unsigned short), 1, file);
+    fwrite(&FH->bfOffBits, sizeof(unsigned int), 1, file);
+
+    // Writing Info Header data
+    fwrite(&IH->biSize, sizeof(unsigned int), 1, file);
+    fwrite(&IH->biWidth, sizeof(int), 1, file);
+    fwrite(&IH->biHeight, sizeof(int), 1, file);
+    fwrite(&IH->biPlanes, sizeof(unsigned short), 1, file);
+    fwrite(&IH->biBitCount, sizeof(unsigned short), 1, file);
+    fwrite(&IH->biCompression, sizeof(unsigned int), 1, file);
+    fwrite(&IH->biSizeImage, sizeof(unsigned int), 1, file);
+    fwrite(&IH->biXPelsPerMeter, sizeof(int), 1, file);
+    fwrite(&IH->biYPelsPerMeter, sizeof(int), 1, file);
+    fwrite(&IH->biClrUsed, sizeof(unsigned int), 1, file);
+    fwrite(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 }
 
 void runlength2(int *vector, FILE *file) {

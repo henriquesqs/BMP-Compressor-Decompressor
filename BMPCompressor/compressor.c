@@ -2,9 +2,7 @@
 
 int main(int argc, char const *argv[]) {
 
-    long size = 0;
     FILE *file = NULL;
-    unsigned char *bmpImage = NULL;
 
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
@@ -22,7 +20,7 @@ int main(int argc, char const *argv[]) {
 
     // Moving our file pointer to the bitmap data region.
     moveToBitmapData(file, bmpFile);
-    
+
     // We're going to split the RGB channels into these 3 matrices below:
     unsigned char **R = NULL, **G = NULL, **B = NULL;
 
@@ -44,16 +42,16 @@ int main(int argc, char const *argv[]) {
     rgbToYcbcr(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
-    // apply quantization and vectorization steps at each 8x8 matrix, due to some researchs proving that this 
+    // apply quantization and vectorization steps at each 8x8 matrix, due to some researchs proving that this
     // division increases the efficiency of these steps.
 
-    float **dctCoefs = allocFloatMatrix(dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
+    FILE *compressed = fopen("compressed.bin", "wb+"); // File to save compressed image
 
-    levelShift(dctCoefs, 128, getHeight(bmpInfo), getWidth(bmpInfo)); // Applying level shift in order to increase DCT performance.
+    Y = divideMatrices(compressed, Y, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    Cb = divideMatrices(compressed, Cb, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    Cr = divideMatrices(compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
 
-    Y = divideMatrices(Y, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo), file);
-    Cb = divideMatrices(Cb, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo), file);
-    Cr = divideMatrices(Cr, dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo), file);
+    fclose(compressed);
 
     // for (int i = 0; i < getHeight(bmpInfo); i++) {
     //     for (int j = 0; j < getWidth(bmpInfo); j++) {
@@ -86,14 +84,12 @@ int main(int argc, char const *argv[]) {
     fclose(file);
     free(bmpFile);
     free(bmpInfo);
-    free(bmpImage);
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));
     freeFloatMatrix(Y, getHeight(bmpInfo));
     freeFloatMatrix(Cb, getHeight(bmpInfo));
     freeFloatMatrix(Cr, getHeight(bmpInfo));
-    freeFloatMatrix(dctCoefs, getHeight(bmpInfo));
 
     return SUCCESS;
 }

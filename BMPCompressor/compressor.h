@@ -219,7 +219,7 @@ int imageSize(BMPINFOHEADER *infoHeader);
         - infoHeader: struct with image infos.
     
 */
-float **divideMatrices(float **component, float **dctCoefs, int height, int width, FILE* file);
+float **divideMatrices(FILE* compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.
@@ -261,7 +261,7 @@ float **quantization(float **component);
         - vector: vector to store elements;
         - mat: matrix to apply vectorization.
 */
-void vectorization(int* vector, float **mat);
+void vectorization(int *vector, float **mat);
 
 /*
     Function responsible for converting from RGB channels to YCbCr.
@@ -288,8 +288,10 @@ void printComponent(unsigned char **component, int height, int width);
         - vector: vector with data to compress;
         - file: file to output compressed data.
 */
-void runlength2(int* vector, FILE *file);
+void runlength2(int *vector, FILE *file);
 
-void runlength(double **component, int height, int width, FILE *file);
+// void runlength(double **component, int height, int width, FILE *file);
+
+void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file);
 
 #endif
