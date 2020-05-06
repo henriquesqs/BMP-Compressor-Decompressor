@@ -214,9 +214,12 @@ int imageSize(BMPINFOHEADER *infoHeader);
     Function responsible for dividing our image into its components (R, G and B) which represents its channels.
 
     PARAMETERS:
-        - component: component we want to divide;
-        - dctCoefs: matrix we're going to store the future dct coefficients;
-        - infoHeader: struct with image infos.
+        - compressed: file to store compressed data;
+        - component: component we want to divide and apply dct, quantization and run-length;
+        - height: height of component;
+        - width: width of component;
+        - IH: struct with image info header;
+        - FH: struct with image file header.
     
 */
 float **divideMatrices(FILE* compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH);
@@ -227,7 +230,9 @@ float **divideMatrices(FILE* compressed, float **component, int height, int widt
 
     PARAMETERS:
         - dctCoefs: matrix where we're going to store dct result;
-        - mat: matrix with coeffs we're going to apply dct.
+        - mat: matrix with coeffs we're going to apply dct;
+        - k: index to control where to store dct coefs in mat;
+        - l: index to control where to store dct coefs in mat.
 */
 float **dct(float **dctCoefs, float **mat, int k, int l);
 
@@ -236,7 +241,7 @@ float **dct(float **dctCoefs, float **mat, int k, int l);
 
     PARAMETERS:
         - mat: matrix to apply level shift;
-        - offBits: quantity of bits to shift.
+        - offBits: quantity of bits to shift;
         - height: height of mat;
         - width: width of mat.
 
@@ -248,10 +253,10 @@ void levelShift(float **mat, int offBits, int height, int width);
     (dctCoefs) by a luminance table.
 
     PARAMETERS:
-        - component: matrix with dct coefficients;
+        - coefs: matrix with dct coefficients.
 
 */
-float **quantization(float **component);
+float **quantization(float **coefs);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
@@ -273,13 +278,10 @@ void vectorization(int *vector, float **mat);
         - Y: matrix of Y component;
         - Cb: matrix of Cb component;
         - Cr: matrix of Cr component;
+        - height: height of components;
+        - width: width of components;
 */
 void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float **Y, float **Cb, float **Cr, int height, int width);
-
-/*
-    Auxiliar function to print a component (unsigned char**) given its height and width
-*/
-void printComponent(unsigned char **component, int height, int width);
 
 /*
     Function responsible for applying Run-Length Encondig (RLE), which is a technic to apply digital data compression.
@@ -290,8 +292,14 @@ void printComponent(unsigned char **component, int height, int width);
 */
 void runlength2(int *vector, FILE *file);
 
-// void runlength(double **component, int height, int width, FILE *file);
+/*
+    Function responsible for writing in 'file' the data inside BMPINFOHEADER and BMPINFOHEADER.
 
+    PARAMETERS:
+        FH: struct with bmp file header;
+        IH: struct with bmp info header;
+        file: pointer to file.
+*/
 void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file);
 
 #endif
