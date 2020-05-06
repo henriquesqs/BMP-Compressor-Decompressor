@@ -1,7 +1,5 @@
-
-// Below, all the functions used to create our BMP compressor
-
 #include "compressor.h"
+#include "descompressor.h"
 
 struct BMPFILEHEADER {
     unsigned short bfType;      /* Magic number for file. Must be in "MB" */
@@ -24,6 +22,8 @@ struct BMPINFOHEADER {
     unsigned int biClrUsed;      /* Number of colors used */
     unsigned int biClrImportant; /* Number of important colors */
 };
+
+// Below, all the functions used to create our BMP compressor
 
 bool validateImage(int height, int width) {
 
@@ -52,7 +52,7 @@ int imageSize(BMPINFOHEADER *infoHeader) {
     return (infoHeader->biHeight * infoHeader->biWidth);
 }
 
-bool readBMPFileHeader(FILE *file, BMPFILEHEADER *FH) {
+int readBMPFileHeader(FILE *file, BMPFILEHEADER *FH) {
 
     fread(&FH->bfType, sizeof(unsigned short), 1, file);
     fread(&FH->bfSize, sizeof(unsigned int), 1, file);
@@ -61,13 +61,13 @@ bool readBMPFileHeader(FILE *file, BMPFILEHEADER *FH) {
     fread(&FH->bfOffBits, sizeof(unsigned int), 1, file);
 
     if (FH->bfType != 0x4D42) {
-        printf("not a bmp file\n");
+        printf("\nNot a BMP file. Please, enter a valid image.\n");
         return ERROR;
     }
     return SUCCESS;
 }
 
-bool readBMPInfoHeader(FILE *file, BMPINFOHEADER *IH) {
+int readBMPInfoHeader(FILE *file, BMPINFOHEADER *IH) {
 
     fread(&IH->biSize, sizeof(unsigned int), 1, file);
     fread(&IH->biWidth, sizeof(int), 1, file);
@@ -82,7 +82,8 @@ bool readBMPInfoHeader(FILE *file, BMPINFOHEADER *IH) {
     fread(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 
     if (!validateImage(IH->biHeight, IH->biWidth)) {
-        printf("Image isnt valid. Height or Width is incorrect.\n");
+        printf("\nImage isnt valid. Height or Width is incorrect.\nTo use our program, your image must have:\n");
+        printf("- Height and width multiple of 8;\n- At least 8x8 pixels;\n- Max size of 1280 x 800 pixels.\n");
         return ERROR;
     }
 
@@ -214,7 +215,7 @@ float **dct(float **dctCoefs, float **mat, int k, int l) {
     return dctCoefs;
 }
 
-float **divideMatrices(FILE* compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH) {
+float **divideMatrices(FILE *compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH) {
 
     int k = 0, l = 0;                                             // aux variables to divide a matrix into 8x8 pieces
     int *vector = malloc(64 * sizeof(int));                       // 'vector' will be used to store values after vectorization
@@ -260,14 +261,13 @@ float **divideMatrices(FILE* compressed, float **component, int height, int widt
 
             // Applying run-length to quantified vector
             runlength2(vector, compressed);
-            
         }
     }
 
     free(vector);
     freeFloatMatrix(mat, 8);
     freeFloatMatrix(dctCoefs, height);
-    
+
     return component;
 }
 
@@ -343,17 +343,6 @@ void vectorization(int *vector, float **mat) {
     // for (int j = 0; j < 64; j++) {
     //     printf("%d, ", vector[j]);
     // }
-}
-
-void printComponent(unsigned char **component, int height, int width) {
-
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            printf("%d ", component[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
 }
 
 void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float **Y, float **Cb, float **Cr, int height, int width) {
@@ -443,6 +432,118 @@ void runlength(double **component, int height, int width, FILE *file) {
     }
 }
 
+int compress(){
+
+    FILE *file = NULL;
+    char fileName[51];
+
+    BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
+    BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
+
+    printf("\nEnter image file name with bmp extension (for example: file.bmp) and max of 50 characters: ");
+    scanf("%50s", fileName);
+
+    // file = fopen("images/8x8.bmp", "rb"); // Openning image that we want to compress.
+    file = fopen(fileName, "rb"); // Openning image that we want to compress.
+
+    if (file == NULL) { // Checking if there was an error opening the image.
+        printf("\nError reading file. Did you enter its correct name?");
+        return ERROR;
+    }
+
+    // Reading the bmp file header and info header so we can read image data without troubles.
+    if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
+        return ERROR;
+
+    // Moving our file pointer to the bitmap data region.
+    moveToBitmapData(file, bmpFile);
+
+    // We're going to split the RGB channels into these 3 matrices below:
+    unsigned char **R = NULL, **G = NULL, **B = NULL;
+
+    // Allocating enough memory to store R, G and B channels.
+    R = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
+    G = allocMatrix(G, getHeight(bmpInfo), getWidth(bmpInfo));
+    B = allocMatrix(B, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    // Separates the bitmap data into its RGB components.
+    separateComponents(file, bmpInfo, R, G, B);
+
+    // Now we're going to convert from RGB to YCbCr to increase DCT performance.
+    float **Y = NULL, **Cb = NULL, **Cr = NULL;
+
+    Y = allocFloatMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = allocFloatMatrix(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = allocFloatMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    rgbToYcbcr(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
+    // apply quantization and vectorization steps at each 8x8 matrix, due to some researchs proving that this
+    // division increases the efficiency of these steps.
+
+    FILE *compressed = fopen("compressed.bin", "wb+"); // File to save compressed image
+    long int auxY, auxCb;                              // aux variables to store where which component ends
+
+    Y = divideMatrices(compressed, Y, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    auxY = ftell(compressed);
+
+    Cb = divideMatrices(compressed, Cb, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    auxCb = ftell(compressed);
+
+    Cr = divideMatrices(compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+
+    fclose(compressed);
+
+    /* INÍCIO DA PARTE DA DES   COMPRESSÃO */
+    // descompressor(bmpInfo, compressed, auxY, auxCb, 0);
+
+    // Free allocated memory.
+    fclose(file);
+    free(bmpFile);
+    free(bmpInfo);
+    freeMatrix(R, getHeight(bmpInfo));
+    freeMatrix(G, getHeight(bmpInfo));
+    freeMatrix(B, getHeight(bmpInfo));
+    freeFloatMatrix(Y, getHeight(bmpInfo));
+    freeFloatMatrix(Cb, getHeight(bmpInfo));
+    freeFloatMatrix(Cr, getHeight(bmpInfo));
+
+    return SUCCESS;
+}
+
 // Below, functions used to create our descompressor
 
-#include "descompressor.h"
+float **runlengthDescomp(int height, int width, FILE *file, long int aux) {
+
+    int counter = 0, times, value, x, y;
+    int **component = allocIntMatrix(component, height, width);
+
+    while (counter < aux && !feof(file)) {
+
+        fread(&value, sizeof(int), 1, file);
+        fread(&times, sizeof(int), 1, file);
+
+        for (int i = 0; i < times; i++) {
+            component[x][y] = value;
+
+            if (y < width - 1)
+                y++;
+            else if (x < height - 1) {
+                y = 0;
+                x++;
+            } else
+                break;
+        }
+
+        counter++;
+    }
+}
+
+void descompressor(BMPINFOHEADER *infoHeader, FILE *compressed, long int auxY, long int auxCb, long int auxCr) {
+
+    // Jumping to image data region
+    fseek(compressed, 54, SEEK_SET);
+
+    runlengthDescomp(getHeight(infoHeader), getWidth(infoHeader), compressed, auxY);
+}

@@ -15,3 +15,8 @@ teste:
 	gcc -g -c teste.c
 	gcc -g -c functions.c
 	gcc -g -o teste functions.c teste.o -lm
+
+all2:
+	gcc -g -c main.c
+	gcc -g -c functions.c
+	gcc -g -o program functions.c main.o -lm

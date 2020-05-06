@@ -60,7 +60,7 @@ bool validateImage(int height, int width);
 
     RETURNS SUCESS if everything went right. ERROR otherwise.
 */
-bool readBMPFileHeader(FILE *file, BMPFILEHEADER *fileHeader);
+int readBMPFileHeader(FILE *file, BMPFILEHEADER *fileHeader);
 
 /* 
     Function to read the file information header and store in the struct.
@@ -71,7 +71,7 @@ bool readBMPFileHeader(FILE *file, BMPFILEHEADER *fileHeader);
 
     RETURNS SUCESS if everything went right. ERROR otherwise.
 */
-bool readBMPInfoHeader(FILE *file, BMPINFOHEADER *infoHeader);
+int readBMPInfoHeader(FILE *file, BMPINFOHEADER *infoHeader);
 
 /* 
     Function to move to bitmap image data given a File header and its bfOffBits.
@@ -222,7 +222,7 @@ int imageSize(BMPINFOHEADER *infoHeader);
         - FH: struct with image file header.
     
 */
-float **divideMatrices(FILE* compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH);
+float **divideMatrices(FILE *compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.
@@ -301,5 +301,10 @@ void runlength2(int *vector, FILE *file);
         file: pointer to file.
 */
 void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file);
+
+/*
+    Function responsible for calling all the methods to do image compress.
+*/
+int compress();
 
 #endif

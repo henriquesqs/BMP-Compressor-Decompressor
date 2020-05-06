@@ -1,4 +1,5 @@
 #include "compressor.h"
+#include "descompressor.h"
 
 int main(int argc, char const *argv[]) {
 
@@ -46,39 +47,20 @@ int main(int argc, char const *argv[]) {
     // division increases the efficiency of these steps.
 
     FILE *compressed = fopen("compressed.bin", "wb+"); // File to save compressed image
+    long int auxY, auxCb;                      // aux variables to store where which component ends
 
     Y = divideMatrices(compressed, Y, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    auxY = ftell(compressed);
+
     Cb = divideMatrices(compressed, Cb, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    auxCb = ftell(compressed);
+
     Cr = divideMatrices(compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
 
     fclose(compressed);
 
-    // for (int i = 0; i < getHeight(bmpInfo); i++) {
-    //     for (int j = 0; j < getWidth(bmpInfo); j++) {
-    //         printf("%f ", Y[i][j]);
-    //     }
-    //     printf("\n");
-    // }
-
-    // On this step, we're going to apply vectorization using zig-zag scan. We do this to
-    // make easier for us to compress the image by moving all the zero values to the end of the vector.
-    // Its told that this step helps to increase run-length encoding performance.
-    // int vectorY[64] = {}, vectorCb[64] = {}, vectorCr[64] = {};
-
-    // // vectorization(vectorY, Y);
-    // // vectorization(vectorCb, Cb);
-    // // vectorization(vectorCr, Cr);
-
-    // // Applying run-length encoding to each component (Y, Cb and Cr).
-    // FILE *rleFile = fopen("compressed", "wb+");
-
-    // // runlength2(vectorY, rleFile);
-    // // runlength2(vectorCb, rleFile);
-    // // runlength2(vectorCr, rleFile);
-
-    // runlength(Y, getHeight(bmpInfo), getWidth(bmpInfo), rleFile);
-    // runlength(Cb, getHeight(bmpInfo), getWidth(bmpInfo), rleFile);
-    // runlength(Cr, getHeight(bmpInfo), getWidth(bmpInfo), rleFile);
+    /* INÍCIO DA PARTE DA DES   COMPRESSÃO */
+    descompressor(bmpInfo, compressed, auxY, auxCb, 0);
 
     // Free allocated memory.
     fclose(file);
