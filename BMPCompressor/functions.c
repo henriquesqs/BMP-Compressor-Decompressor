@@ -244,10 +244,10 @@ float **dct(float **dctCoefs, float **mat, int k, int l) {
 
 float **divideMatrices(int lum, FILE *compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH) {
 
-    int k = 0, l = 0;                                    // aux variables to divide a matrix into 8x8 pieces
-    char *vector = malloc(64 * sizeof(char));            // 'vector' will be used to store values after vectorization
-    float **mat = allocFloatMatrix(mat, 8, 8);           // 'mat' will allocate each 8x8 piece of component
-    float **dctCoefs = allocFloatMatrix(dctCoefs, 8, 8); // 'dctCoefs' will temporally allocate values after dct
+    int k = 0, l = 0;                                           // aux variables to divide a matrix into 8x8 pieces
+    unsigned char *vector = malloc(64 * sizeof(unsigned char)); // 'vector' will be used to store values after vectorization
+    float **mat = allocFloatMatrix(mat, 8, 8);                  // 'mat' will allocate each 8x8 piece of component
+    float **dctCoefs = allocFloatMatrix(dctCoefs, 8, 8);        // 'dctCoefs' will temporally allocate values after dct
 
     // Applying level shift to 'component' in order to increase performance on the next steps
     levelShift(component, -128, height, width);
@@ -333,7 +333,7 @@ float **quantizationCrominance(float **component) {
     return component;
 }
 
-void vectorization(char *vector, float **mat) {
+void vectorization(unsigned char *vector, float **mat) {
 
     int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
     int steps = 0;        // Variable to avoid buffer overflow.
@@ -418,7 +418,7 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file) {
     fwrite(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 }
 
-void runlength2(char *vector, FILE *file) {
+void runlength2(unsigned char *vector, FILE *file) {
 
     int count = 0;        // This variable will count occurrences of the same value until a different one is found.
     char binary[9];       // This will stores the binary representation of 'count'.
@@ -431,9 +431,9 @@ void runlength2(char *vector, FILE *file) {
         while (i < 63 && vector[i] == vector[i + 1]) {
             count++;
             i++;
-        }
+        }   
 
-        // When finds a different value, starts preparation to 
+        // When finds a different value, starts preparation to
         // write the previous value and its count in file.
 
         // Converting count to binary
@@ -447,7 +447,7 @@ void runlength2(char *vector, FILE *file) {
             buffer = (buffer << 1) | (binary[j] == '1');
 
         // Writes value and its count in file
-        fwrite(&vector[i], sizeof(char), 1, file);
+        fwrite(&vector[i], sizeof(vector[i]), 1, file);
         fwrite(&buffer, sizeof(buffer), 1, file);
     }
 }

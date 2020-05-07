@@ -288,7 +288,7 @@ float **quantizationCrominance(float **component);
         - vector: vector to store elements;
         - mat: matrix to apply vectorization.
 */
-void vectorization(char *vector, float **mat);
+void vectorization(unsigned char *vector, float **mat);
 
 /*
     Function responsible for converting from RGB channels to YCbCr.
@@ -312,7 +312,7 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float *
         - vector: vector with data to compress;
         - file: file to output compressed data.
 */
-void runlength2(char *vector, FILE *file);
+void runlength2(unsigned char *vector, FILE *file);
 
 /*
     Function responsible for writing in 'file' the data inside BMPINFOHEADER and BMPINFOHEADER.
