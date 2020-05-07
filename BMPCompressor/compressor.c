@@ -45,7 +45,7 @@ int main(int argc, char const *argv[]) {
     // and apply quantization and vectorization steps at each 8x8 matrix, due to some researchs proving that
     // this division increases the efficiency of these steps.
 
-    long int auxY, auxCb; // Aux variables to store where which component ends.
+    long int auxY, auxCb; // Aux variables to store where each component ends.
 
     FILE *compressed = fopen("compressed.bin", "wb+"); // File to save compressed image.
 
