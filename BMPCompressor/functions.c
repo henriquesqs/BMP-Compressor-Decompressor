@@ -23,7 +23,19 @@ struct BMPINFOHEADER {
     unsigned int biClrImportant; /* Number of important colors */
 };
 
+double cosine[8][8]; // global variable to store cosine values to later be used in DCT
+
 // Below, all the functions used to create our BMP compressor
+
+void initCosLUT(){
+    for (int i = 0; i < 8; i++) {
+        for (int x = 0; x < 8; x++) {
+
+            cosine[i][x] = 0;
+            cosine[i][x] = cos(((((2.0 * i) + 1.0) * (x * PI)) / (16)));
+        }
+    }
+}
 
 bool validateImage(int height, int width) {
 
@@ -231,12 +243,10 @@ float **dct(float **dctCoefs, float **mat) {
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
 
-                    // WARNING: we are storing a double value into a float matrix.
-                    // Due to this projects purpouse, this should not be a problem.
-                    aux += mat[x][y] * cos((2 * x + 1) * i * PI / 16) * cos((2 * y + 1) * j * PI / 16);
+                    aux += mat[x][y] * cosine[x][i] * cosine[y][j];
                 }
             }
-            
+
             dctCoefs[i][j] = c1 * c2 * 0.25 * aux;
         }
     }
@@ -292,16 +302,16 @@ float **divideMatrices(int lum, FILE *compressed, float **component, int height,
 
             dct(dctCoefs, mat);
 
-            idct(mat, dctCoefs);
+            // idct(mat, dctCoefs);
 
-            printf("\n");
-            for (int a = 0; a < 8; a++) {
-                for (int b = 0; b < 8; b++) {
-                    if (mat2[a][b] != mat[a][b])
-                        printf("mat2: %f e mat: %f\n", mat2[a][b], mat[a][b]);
-                }
-                printf("\n");
-            }
+            // printf("\n");
+            // for (int a = 0; a < 8; a++) {
+            //     for (int b = 0; b < 8; b++) {
+            //         if (mat2[a][b] != mat[a][b])
+            //             printf("mat2: %f e mat: %f\n", mat2[a][b], mat[a][b]);
+            //     }
+            //     printf("\n");
+            // }
 
             if (lum)
                 quantizationLuminance(dctCoefs);
@@ -616,9 +626,7 @@ float **idct(float **dctCoefs, float **mat) {
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
 
-                    // WARNING: we are storing a double value into a float matrix.
-                    // Due to this projects purpouse, this should not be a problem.
-                    aux += c1 * c2 * mat[x][y] * cos((2 * x + 1) * i * PI / 16) * cos((2 * y + 1) * j * PI / 16);
+                    aux += c1 * c2 * mat[x][y] * cosine[x][i] * cosine[y][j];
                 }
             }
 
@@ -684,4 +692,3 @@ int descompressor(BMPINFOHEADER *infoHeader, FILE *compressed, long int *auxY, l
 
     runlengthDescomp(getHeight(infoHeader), getWidth(infoHeader), compressed, auxY);
 }
-

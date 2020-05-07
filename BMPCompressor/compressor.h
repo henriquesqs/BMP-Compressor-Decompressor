@@ -18,6 +18,12 @@ typedef struct BMPFILEHEADER BMPFILEHEADER; // BMP file header structure
 typedef struct BMPINFOHEADER BMPINFOHEADER; // BMP file info structure
 
 /*
+    Method to initialize cosine look-up table. This is due to the need of
+    performance improvements on DCT function.
+*/
+void initCosLUT();
+
+/*
     Function responsible for return the width of the image
     from its infoHeader struct.
 
