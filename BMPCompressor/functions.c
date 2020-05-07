@@ -684,3 +684,4 @@ int descompressor(BMPINFOHEADER *infoHeader, FILE *compressed, long int *auxY, l
 
     runlengthDescomp(getHeight(infoHeader), getWidth(infoHeader), compressed, auxY);
 }
+
