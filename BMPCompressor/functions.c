@@ -211,9 +211,9 @@ void levelShift(float **mat, int offBits, int height, int width) {
             mat[i][j] += offBits;
 }
 
-float **dct(float **dctCoefs, float **mat, int k, int l) {
+float **dct(float **dctCoefs, float **mat) {
 
-    float c1, c2;
+    float c1 = 0, c2 = 0, aux = 0;
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -226,16 +226,18 @@ float **dct(float **dctCoefs, float **mat, int k, int l) {
             if (j == 0)
                 c2 = (1 / sqrt(2));
 
-            float aux = 0; // aux variable to store sum values
+            aux = 0; // aux variable to store sum values
 
-            for (int x = 0; x < 8; x++)
-                for (int y = 0; y < 8; y++)
+            for (int x = 0; x < 8; x++) {
+                for (int y = 0; y < 8; y++) {
 
                     // WARNING: we are storing a double value into a float matrix.
                     // Due to this projects purpouse, this should not be a problem.
                     aux += mat[x][y] * cos((2 * x + 1) * i * PI / 16) * cos((2 * y + 1) * j * PI / 16);
-
-            dctCoefs[i][j] = c1 * c2 * 1 / 4 * aux;
+                }
+            }
+            
+            dctCoefs[i][j] = c1 * c2 * 0.25 * aux;
         }
     }
 
@@ -244,14 +246,11 @@ float **dct(float **dctCoefs, float **mat, int k, int l) {
 
 float **divideMatrices(int lum, FILE *compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH) {
 
-    int k = 0, l = 0;                                           // aux variables to divide a matrix into 8x8 pieces
     float **mat = allocFloatMatrix(mat, 8, 8);                  // 'mat' will allocate each 8x8 piece of component
     float **dctCoefs = allocFloatMatrix(dctCoefs, 8, 8);        // 'dctCoefs' will temporally allocate values after dct
     unsigned char *vector = malloc(64 * sizeof(unsigned char)); // 'vector' will be used to store values after vectorization
 
-    // Initializing vector
-    for (int i = 0; i < 64; i++)
-        vector[i] = 0;
+    float mat2[8][8];
 
     // Applying level shift to 'component' in order to increase performance on the next steps
     levelShift(component, -128, height, width);
@@ -262,27 +261,82 @@ float **divideMatrices(int lum, FILE *compressed, float **component, int height,
     for (int i = 0; i < height / 8; i++) {
         for (int j = 0; j < width / 8; j++) {
 
-            for (k = 0; k < 8; k++) {
-                for (l = 0; l < 8; l++) {
+            for (int k = 0; k < 8; k++) {
+                for (int l = 0; l < 8; l++) {
 
                     // We are just copying a 8x8 part of 'component' matrix to apply
                     // dct in each 8x8 part in order to increase its performance.
-                    mat[k][l] = component[i * 8 + k][j * 8 + l];
+                    mat2[k][l] = mat[k][l] = component[i * 8 + k][j * 8 + l];
                 }
             }
 
-            dct(dctCoefs, mat, k, l);
+            // emptying dctCoefs
+            for (int a = 0; a < 8; a++) {
+                for (int b = 0; b < 8; b++) {
+                    dctCoefs[a][b] = 0;
+                }
+            }
+
+            // emptying vector
+            for (int a = 0; a < 64; a++) {
+                vector[a] = 0;
+            }
+
+            // printf("\ndctcoefs antes da dct\n");
+            // for (int a = 0; a < 8; a++) {
+            //     for (int b = 0; b < 8; b++) {
+            //         printf("%f ", dctCoefs[a][b]);
+            //     }
+            //     printf("\n");
+            // }
+
+            dct(dctCoefs, mat);
+
+            idct(mat, dctCoefs);
+
+            printf("\n");
+            for (int a = 0; a < 8; a++) {
+                for (int b = 0; b < 8; b++) {
+                    if (mat2[a][b] != mat[a][b])
+                        printf("mat2: %f e mat: %f\n", mat2[a][b], mat[a][b]);
+                }
+                printf("\n");
+            }
 
             if (lum)
                 quantizationLuminance(dctCoefs);
             else
                 quantizationCrominance(dctCoefs);
 
+            // printf("\ndctcoefs depois da quanti\n");
+            // for (int a = 0; a < 8; a++) {
+            //     for (int b = 0; b < 8; b++) {
+            //         printf("%f ", dctCoefs[a][b]);
+            //     }
+            //     printf("\n");
+            // }
+
             // On this step, we're going to apply vectorization using zig-zag scan. We do this to
             // make easier for us to compress the image by moving all the zero values to the end of the vector.
             // Its told that this step helps to increase run-length encoding performance.
 
+            // printf("\nVector antes da vetorizacao: \n");
+            // for (int a = 0; a < 64; a++)
+            //     printf("%d ", vector[a]);
+
             vectorization(vector, dctCoefs);
+
+            // printf("\ndctcoefs depois da vet\n");
+            // for (int a = 0; a < 8; a++) {
+            //     for (int b = 0; b < 8; b++) {
+            //         printf("%f ", dctCoefs[a][b]);
+            //     }
+            //     printf("\n");
+            // }
+
+            // printf("\nvector dps da vet:\n");
+            // for (int a = 0; a < 64; a++)
+            //     printf("%d ", vector[a]);
 
             // Writing header from image before its compression.
             writeHeaders(FH, IH, compressed);
@@ -428,7 +482,7 @@ void runlength(unsigned char *vector, FILE *file) {
     char binary[9];       // This will stores the binary representation of 'count'.
     unsigned char buffer; // This will stores the char representation of binary, i.e, count.
 
-    for (int i = 0; i < 64; i++) {
+    for (int i = 1; i < 64; i++) { // 'i' starts at position 1 because position 0 has a DC coefficient and run-length must be applied in AC coefficientes
 
         // Counting occurrences of current value (while avoiding buffer overflow).
         count = 1;
@@ -542,6 +596,39 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
 
 // Below, functions used to create our descompressor
 
+float **idct(float **dctCoefs, float **mat) {
+
+    float c1 = 0, c2 = 0, aux = 0;
+
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+
+            c1 = c2 = 1; // default value of consts
+
+            if (i == 0)
+                c1 = (1 / sqrt(2));
+
+            if (j == 0)
+                c2 = (1 / sqrt(2));
+
+            aux = 0; // aux variable to store sum values
+
+            for (int x = 0; x < 8; x++) {
+                for (int y = 0; y < 8; y++) {
+
+                    // WARNING: we are storing a double value into a float matrix.
+                    // Due to this projects purpouse, this should not be a problem.
+                    aux += c1 * c2 * mat[x][y] * cos((2 * x + 1) * i * PI / 16) * cos((2 * y + 1) * j * PI / 16);
+                }
+            }
+
+            dctCoefs[i][j] = 0.25 * aux;
+        }
+    }
+
+    return dctCoefs;
+}
+
 float **runlengthDescomp(int height, int width, FILE *file, long int *aux) {
 
     int counter = 0, times, value, x, y;
@@ -566,6 +653,8 @@ float **runlengthDescomp(int height, int width, FILE *file, long int *aux) {
 
         counter++;
     }
+
+    freeIntMatrix(component, height);
 }
 
 int descompressor(BMPINFOHEADER *infoHeader, FILE *compressed, long int *auxY, long int *auxCb) {
@@ -589,9 +678,6 @@ int descompressor(BMPINFOHEADER *infoHeader, FILE *compressed, long int *auxY, l
     // Reading the bmp file header and info header so we can read image data without troubles.
     if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
         return ERROR;
-
-    // Jumping to image data region
-    // fseek(compressed, 54, SEEK_SET);
 
     // Moving our file pointer to the bitmap data region.
     moveToBitmapData(file, bmpFile);

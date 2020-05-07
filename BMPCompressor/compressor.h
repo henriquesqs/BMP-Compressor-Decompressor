@@ -242,11 +242,9 @@ float **divideMatrices(int lum, FILE *compressed, float **component, int height,
 
     PARAMETERS:
         - dctCoefs: matrix where we're going to store dct result;
-        - mat: matrix with coeffs we're going to apply dct;
-        - k: index to control where to store dct coefs in mat;
-        - l: index to control where to store dct coefs in mat.
+        - mat: matrix with coeffs we're going to apply dct.
 */
-float **dct(float **dctCoefs, float **mat, int k, int l);
+float **dct(float **dctCoefs, float **mat);
 
 /*
     Function responsible for apply a level shift in double matrices.

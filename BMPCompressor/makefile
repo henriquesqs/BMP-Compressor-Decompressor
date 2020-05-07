@@ -10,13 +10,18 @@ run:
 
 	./compressor
 
-teste:
+clean:
+	rm *.o
+	rm *.exe
 
-	gcc -g -c teste.c
+teste:
+	
+	gcc -g -c testeDCT.c
 	gcc -g -c functions.c
-	gcc -g -o teste functions.c teste.o -lm
+	gcc -g -o teste.exe functions.c testeDCT.o -lm
 
 all2:
+	 
 	gcc -g -c main.c
 	gcc -g -c functions.c
 	gcc -g -o program functions.c main.o -lm

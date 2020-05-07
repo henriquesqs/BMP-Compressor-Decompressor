@@ -22,15 +22,15 @@ void menu(int invalid) {
 
 int main(int argc, char const *argv[]) {
 
-    int option;      // variable to store users option.
+    int option = 0;      // variable to store users option.
     int error = 0;   // variable to control functions errors return.
-    double duration; // variable to store duration of compression and descompression functions.
+    double duration = 0; // variable to store duration of compression and descompression functions.
 
     double *compressRate = malloc(sizeof(double));  // variable to stores compression rate.
     long int *auxY = malloc(1 * sizeof(long int));  // variable to auxiliate in descompression.
     long int *auxCb = malloc(1 * sizeof(long int)); // variable to auxiliate in descompression.
 
-    clock_t timeBefore, timeAfter; // variables to control compression and descompression running time.
+    clock_t timeBefore = 0, timeAfter = 0; // variables to control compression and descompression running time.
 
     menu(0);              // showing option menu
     scanf("%d", &option); // waiting for user to choose an option
@@ -43,6 +43,8 @@ int main(int argc, char const *argv[]) {
             break;
 
         case 1: // Option 1: image compression
+
+            timeBefore = timeAfter = 0; // initializing values
 
             timeBefore = clock(); // saving time before starting image compression
 
@@ -62,10 +64,25 @@ int main(int argc, char const *argv[]) {
                 break;
             }
 
+
             break;
 
         case 2: // Option 1: image descompression
-            // descompressor(bmpInfo, compressed, auxY, auxCb, 0);
+           
+            timeBefore = timeAfter = 0; // initializing values
+           
+            // if(descompressor(bmpInfo, compressed, auxY, auxCb, 0) > 0){
+            //     timeAfter = clock() - timeBefore;
+            //     duration = (timeAfter - timeBefore) / CLOCKS_PER_SEC;
+
+            //     printf("\nImage successfully descompressed in %.3lf seconds!\n", duration);
+            //     printf("The resulting file (descompressed.bmp) is located at the root of this project.\n");
+
+            // }
+            // else{
+            //     error = 1;
+            //     option = 0;
+            // }
             break;
 
         default: // Default option: when users enters an invalid option
@@ -82,10 +99,10 @@ int main(int argc, char const *argv[]) {
         }
     }
 
-    if (error == 0)
-        printf("\nThanks for using our services! Have a nice day =)\n");
-    else
+    if(error)
         printf("\n\nSorry for this...\nIf this error persists, contact us by our github accounts: @henriquesqs or @DennisLemkeGreen\n");
+    else
+        printf("\nThanks for using our services! Have a nice day =)\n");
 
     free(compressRate);
     free(auxY);
