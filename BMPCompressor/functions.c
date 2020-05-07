@@ -27,7 +27,7 @@ double cosine[8][8]; // global variable to store cosine values to later be used 
 
 // Below, all the functions used to create our BMP compressor
 
-void initCosLUT(){
+void initCosLUT() {
     for (int i = 0; i < 8; i++) {
         for (int x = 0; x < 8; x++) {
 
@@ -260,8 +260,6 @@ float **divideMatrices(int lum, FILE *compressed, float **component, int height,
     float **dctCoefs = allocFloatMatrix(dctCoefs, 8, 8);        // 'dctCoefs' will temporally allocate values after dct
     unsigned char *vector = malloc(64 * sizeof(unsigned char)); // 'vector' will be used to store values after vectorization
 
-    float mat2[8][8];
-
     // Applying level shift to 'component' in order to increase performance on the next steps
     levelShift(component, -128, height, width);
 
@@ -276,77 +274,33 @@ float **divideMatrices(int lum, FILE *compressed, float **component, int height,
 
                     // We are just copying a 8x8 part of 'component' matrix to apply
                     // dct in each 8x8 part in order to increase its performance.
-                    mat2[k][l] = mat[k][l] = component[i * 8 + k][j * 8 + l];
+                    mat[k][l] = component[i * 8 + k][j * 8 + l];
                 }
             }
 
             // emptying dctCoefs
-            for (int a = 0; a < 8; a++) {
-                for (int b = 0; b < 8; b++) {
+            for (int a = 0; a < 8; a++)
+                for (int b = 0; b < 8; b++)
                     dctCoefs[a][b] = 0;
-                }
-            }
 
             // emptying vector
-            for (int a = 0; a < 64; a++) {
+            for (int a = 0; a < 64; a++)
                 vector[a] = 0;
-            }
-
-            // printf("\ndctcoefs antes da dct\n");
-            // for (int a = 0; a < 8; a++) {
-            //     for (int b = 0; b < 8; b++) {
-            //         printf("%f ", dctCoefs[a][b]);
-            //     }
-            //     printf("\n");
-            // }
 
             dct(dctCoefs, mat);
 
-            // idct(mat, dctCoefs);
-
-            // printf("\n");
-            // for (int a = 0; a < 8; a++) {
-            //     for (int b = 0; b < 8; b++) {
-            //         if (mat2[a][b] != mat[a][b])
-            //             printf("mat2: %f e mat: %f\n", mat2[a][b], mat[a][b]);
-            //     }
-            //     printf("\n");
-            // }
+            // idct(dctCoefs, mat);
 
             if (lum)
                 quantizationLuminance(dctCoefs);
             else
                 quantizationCrominance(dctCoefs);
 
-            // printf("\ndctcoefs depois da quanti\n");
-            // for (int a = 0; a < 8; a++) {
-            //     for (int b = 0; b < 8; b++) {
-            //         printf("%f ", dctCoefs[a][b]);
-            //     }
-            //     printf("\n");
-            // }
-
             // On this step, we're going to apply vectorization using zig-zag scan. We do this to
             // make easier for us to compress the image by moving all the zero values to the end of the vector.
             // Its told that this step helps to increase run-length encoding performance.
 
-            // printf("\nVector antes da vetorizacao: \n");
-            // for (int a = 0; a < 64; a++)
-            //     printf("%d ", vector[a]);
-
             vectorization(vector, dctCoefs);
-
-            // printf("\ndctcoefs depois da vet\n");
-            // for (int a = 0; a < 8; a++) {
-            //     for (int b = 0; b < 8; b++) {
-            //         printf("%f ", dctCoefs[a][b]);
-            //     }
-            //     printf("\n");
-            // }
-
-            // printf("\nvector dps da vet:\n");
-            // for (int a = 0; a < 64; a++)
-            //     printf("%d ", vector[a]);
 
             // Writing header from image before its compression.
             writeHeaders(FH, IH, compressed);
@@ -610,27 +564,27 @@ float **idct(float **dctCoefs, float **mat) {
 
     float c1 = 0, c2 = 0, aux = 0;
 
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
 
             c1 = c2 = 1; // default value of consts
 
-            if (i == 0)
-                c1 = (1 / sqrt(2));
-
-            if (j == 0)
-                c2 = (1 / sqrt(2));
-
             aux = 0; // aux variable to store sum values
 
-            for (int x = 0; x < 8; x++) {
-                for (int y = 0; y < 8; y++) {
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
 
-                    aux += c1 * c2 * mat[x][y] * cosine[x][i] * cosine[y][j];
+                    if (i == 0)
+                        c1 = (1 / sqrt(2));
+
+                    if (j == 0)
+                        c2 = (1 / sqrt(2));
+
+                    aux += c1 * c2 * mat[i][j] * cosine[x][i] * cosine[y][j];
                 }
             }
 
-            dctCoefs[i][j] = 0.25 * aux;
+            dctCoefs[x][y] = 0.25 * aux;
         }
     }
 

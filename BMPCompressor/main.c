@@ -8,10 +8,7 @@
     PARAMETERS:
         - invalid: flag to know if we're showing this menu after an invalid input.
 */
-void menu(int invalid) {
-
-    if (invalid)
-        printf("\nSorry, invalid option. Do you want to exit? Enter 0.\n\n");
+void menu() {
 
     printf("\nEnter your desired option:\n\n");
     printf("1. Compress an image;\n");
@@ -23,7 +20,7 @@ void menu(int invalid) {
 int main(int argc, char const *argv[]) {
 
     int option = 0;      // variable to store users option.
-    int error = 0;   // variable to control functions errors return.
+    int error = 0;       // variable to control functions errors return.
     double duration = 0; // variable to store duration of compression and descompression functions.
 
     double *compressRate = malloc(sizeof(double));  // variable to stores compression rate.
@@ -32,10 +29,10 @@ int main(int argc, char const *argv[]) {
 
     clock_t timeBefore = 0, timeAfter = 0; // variables to control compression and descompression running time.
 
-    menu(0);              // showing option menu
-    scanf("%d", &option); // waiting for user to choose an option
-
     while (true) {
+
+        menu(0); // showing option menu
+        scanf("%d", &option); // waiting for user to choose an option
 
         switch (option) {
 
@@ -53,7 +50,7 @@ int main(int argc, char const *argv[]) {
                 timeAfter = clock() - timeBefore;                     // saving time after starting image compression
                 duration = (timeAfter - timeBefore) / CLOCKS_PER_SEC; // calculating duration of compression process
 
-                printf("\nImage successfully compressed in %.3lf seconds with a compress rate of %.lf percent!\n", duration, compressRate[0]);
+                printf("\nImage successfully compressed in %lf seconds with a compress rate of %.lf percent!\n", duration, compressRate[0]);
                 printf("The resulting file (compressed.bin) is located at the root of this project.\n");
             }
 
@@ -64,13 +61,12 @@ int main(int argc, char const *argv[]) {
                 break;
             }
 
-
             break;
 
         case 2: // Option 1: image descompression
-           
+
             timeBefore = timeAfter = 0; // initializing values
-           
+
             // if(descompressor(bmpInfo, compressed, auxY, auxCb, 0) > 0){
             //     timeAfter = clock() - timeBefore;
             //     duration = (timeAfter - timeBefore) / CLOCKS_PER_SEC;
@@ -86,20 +82,16 @@ int main(int argc, char const *argv[]) {
             break;
 
         default: // Default option: when users enters an invalid option
-            menu(1);
-            scanf("%d", &option);
+            printf("\nSorry, invalid option. Do you want to exit? Enter 0.\n");
             break;
         }
 
         if (option == 0)
             break;
-        else if (option <= 2) {
-            menu(0);
-            scanf("%d", &option);
-        }
+        
     }
 
-    if(error)
+    if (error)
         printf("\n\nSorry for this...\nIf this error persists, contact us by our github accounts: @henriquesqs or @DennisLemkeGreen\n");
     else
         printf("\nThanks for using our services! Have a nice day =)\n");
