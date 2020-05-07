@@ -2,12 +2,10 @@
 
 int main(int argc, char const *argv[]) {
 
-    FILE *file = NULL;
-
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
 
-    file = fopen("images/cachorro.bmp", "rb"); // Openning image that we want to compress.
+    FILE *file = fopen("images/cachorro.bmp", "rb"); // Openning image that we want to compress
 
     if (file == NULL) { // Checking if there was an error opening the image.
         printf("error reading file");
@@ -45,7 +43,7 @@ int main(int argc, char const *argv[]) {
     // and apply quantization and vectorization steps at each 8x8 matrix, due to some researchs proving that
     // this division increases the efficiency of these steps.
 
-    long int auxY, auxCb; // Aux variables to store where each component ends.
+    long int auxY = 0, auxCb = 0; // Aux variables to store where each component ends.
 
     FILE *compressed = fopen("compressed.bin", "wb+"); // File to save compressed image.
 
@@ -57,12 +55,11 @@ int main(int argc, char const *argv[]) {
 
     Cr = divideMatrices(0, compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
 
-    fclose(compressed);
-
     // Free allocated memory.
     fclose(file);
     free(bmpFile);
     free(bmpInfo);
+    fclose(compressed);
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));

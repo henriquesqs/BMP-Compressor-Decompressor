@@ -109,11 +109,11 @@ void moveToBitmapData(FILE *file, BMPFILEHEADER *FH) {
 
 unsigned char **allocMatrix(unsigned char **mat, int n, int m) {
 
-    mat = malloc(n * sizeof(char *));
+    mat = malloc(n * sizeof(unsigned char *));
 
     // Allocating enough memory
     for (int i = 0; i < n; i++)
-        mat[i] = malloc(m * sizeof(char));
+        mat[i] = malloc(m * sizeof(unsigned char));
 
     // Initializing mat
     for (int i = 0; i < n; i++) {
@@ -245,9 +245,13 @@ float **dct(float **dctCoefs, float **mat, int k, int l) {
 float **divideMatrices(int lum, FILE *compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH) {
 
     int k = 0, l = 0;                                           // aux variables to divide a matrix into 8x8 pieces
-    unsigned char *vector = malloc(64 * sizeof(unsigned char)); // 'vector' will be used to store values after vectorization
     float **mat = allocFloatMatrix(mat, 8, 8);                  // 'mat' will allocate each 8x8 piece of component
     float **dctCoefs = allocFloatMatrix(dctCoefs, 8, 8);        // 'dctCoefs' will temporally allocate values after dct
+    unsigned char *vector = malloc(64 * sizeof(unsigned char)); // 'vector' will be used to store values after vectorization
+
+    // Initializing vector
+    for (int i = 0; i < 64; i++)
+        vector[i] = 0;
 
     // Applying level shift to 'component' in order to increase performance on the next steps
     levelShift(component, -128, height, width);
@@ -284,7 +288,7 @@ float **divideMatrices(int lum, FILE *compressed, float **component, int height,
             writeHeaders(FH, IH, compressed);
 
             // Applying run-length to compress data on quantified vector. Also, we output the compressed file (compressed.bin)
-            runlength2(vector, compressed);
+            runlength(vector, compressed);
         }
     }
 
@@ -418,7 +422,7 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file) {
     fwrite(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 }
 
-void runlength2(unsigned char *vector, FILE *file) {
+void runlength(unsigned char *vector, FILE *file) {
 
     int count = 0;        // This variable will count occurrences of the same value until a different one is found.
     char binary[9];       // This will stores the binary representation of 'count'.
@@ -431,7 +435,7 @@ void runlength2(unsigned char *vector, FILE *file) {
         while (i < 63 && vector[i] == vector[i + 1]) {
             count++;
             i++;
-        }   
+        }
 
         // When finds a different value, starts preparation to
         // write the previous value and its count in file.
@@ -449,37 +453,6 @@ void runlength2(unsigned char *vector, FILE *file) {
         // Writes value and its count in file
         fwrite(&vector[i], sizeof(vector[i]), 1, file);
         fwrite(&buffer, sizeof(buffer), 1, file);
-    }
-}
-
-void runlength(double **component, int height, int width, FILE *file) {
-
-    short count = 0;
-
-    // for (int i = 0; i < 64; i++) {
-
-    //     // Counting occurrences of current value avoiding buffer overflow.
-    //     count = 1;
-    //     while (i < 63 && vector[i] == vector[i + 1]) {
-    //         count++;
-    //         i++;
-    //     }
-
-    //     // When finds a different value, writes in file.
-    //     fwrite(&vector[i], sizeof(int), 1, file);
-    //     fwrite(&count, sizeof(short), 1, file);
-    // }
-
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            count = 1;
-            while (j < width - 1 && component[i][j] == component[i][j + 1]) {
-                count++;
-                j++;
-            }
-            fwrite(&component[i][j], sizeof(double), 1, file);
-            fwrite(&count, sizeof(short), 1, file);
-        }
     }
 }
 
