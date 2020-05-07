@@ -41,7 +41,7 @@ int main(int argc, char const *argv[]) {
 
     rgbToYcbcr(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
+    // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm
     // and apply quantization and vectorization steps at each 8x8 matrix, due to some researchs proving that
     // this division increases the efficiency of these steps.
 
