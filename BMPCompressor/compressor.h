@@ -222,9 +222,10 @@ int imageSize(BMPINFOHEADER *infoHeader);
 long int fileSize(FILE *file);
 
 /*
-    Function responsible for dividing our image into its components (R, G and B) which represents its channels.
+    Function responsible for dividing our image into its components (Y, Cb and Cr) which represents its channels.
 
     PARAMETERS:
+        - lum: flag to indicate if its a luminance component or not;
         - compressed: file to store compressed data;
         - component: component we want to divide and apply dct, quantization and run-length;
         - height: height of component;
@@ -233,7 +234,7 @@ long int fileSize(FILE *file);
         - FH: struct with image file header.
     
 */
-float **divideMatrices(FILE *compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH);
+float **divideMatrices(int lum, FILE *compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.
@@ -260,14 +261,24 @@ float **dct(float **dctCoefs, float **mat, int k, int l);
 void levelShift(float **mat, int offBits, int height, int width);
 
 /*
-    Function responsible for apply quantization. It divides our coefficients matrix
-    (dctCoefs) by a luminance table.
+    Function responsible for apply quantization in luminance components. 
+    It divides our coefficients matrix (dctCoefs) by a luminance table.
 
     PARAMETERS:
         - coefs: matrix with dct coefficients.
 
 */
-float **quantization(float **coefs);
+float **quantizationLuminance(float **coefs);
+
+/*
+    Function responsible for apply quantization in crominance components. 
+    It divides our coefficients matrix (dctCoefs) by a crominance table.
+
+    PARAMETERS:
+        - coefs: matrix with dct coefficients.
+
+*/
+float **quantizationCrominance(float **component);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
@@ -277,7 +288,7 @@ float **quantization(float **coefs);
         - vector: vector to store elements;
         - mat: matrix to apply vectorization.
 */
-void vectorization(int *vector, float **mat);
+void vectorization(char *vector, float **mat);
 
 /*
     Function responsible for converting from RGB channels to YCbCr.
@@ -301,7 +312,7 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float *
         - vector: vector with data to compress;
         - file: file to output compressed data.
 */
-void runlength2(int *vector, FILE *file);
+void runlength2(char *vector, FILE *file);
 
 /*
     Function responsible for writing in 'file' the data inside BMPINFOHEADER and BMPINFOHEADER.

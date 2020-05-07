@@ -1,5 +1,4 @@
 #include "compressor.h"
-#include "descompressor.h"
 
 int main(int argc, char const *argv[]) {
 
@@ -8,7 +7,7 @@ int main(int argc, char const *argv[]) {
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
 
-    file = fopen("images/8x8.bmp", "rb"); // Openning image that we want to compress.
+    file = fopen("images/cachorro.bmp", "rb"); // Openning image that we want to compress.
 
     if (file == NULL) { // Checking if there was an error opening the image.
         printf("error reading file");
@@ -43,24 +42,22 @@ int main(int argc, char const *argv[]) {
     rgbToYcbcr(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
-    // apply quantization and vectorization steps at each 8x8 matrix, due to some researchs proving that this
-    // division increases the efficiency of these steps.
+    // and apply quantization and vectorization steps at each 8x8 matrix, due to some researchs proving that
+    // this division increases the efficiency of these steps.
 
-    FILE *compressed = fopen("compressed.bin", "wb+"); // File to save compressed image
-    long int auxY, auxCb;                      // aux variables to store where which component ends
+    long int auxY, auxCb; // Aux variables to store where which component ends.
 
-    Y = divideMatrices(compressed, Y, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    FILE *compressed = fopen("compressed.bin", "wb+"); // File to save compressed image.
+
+    Y = divideMatrices(1, compressed, Y, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
     auxY = ftell(compressed);
 
-    Cb = divideMatrices(compressed, Cb, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    Cb = divideMatrices(0, compressed, Cb, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
     auxCb = ftell(compressed);
 
-    Cr = divideMatrices(compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    Cr = divideMatrices(0, compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
 
     fclose(compressed);
-
-    /* INÍCIO DA PARTE DA DES   COMPRESSÃO */
-    // descompressor(bmpInfo, compressed, auxY, auxCb, 0);
 
     // Free allocated memory.
     fclose(file);
