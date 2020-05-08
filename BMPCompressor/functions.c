@@ -620,7 +620,7 @@ float **runlengthDescomp(int height, int width, FILE *file, long int *aux) {
     freeIntMatrix(component, height);
 }
 
-int descompressor(FILE *compressed, long int *auxY, long int *auxCb) {
+int descompressor(long int *auxY, long int *auxCb) {
 
     FILE *file = NULL;
     char fileName[51];
@@ -645,5 +645,5 @@ int descompressor(FILE *compressed, long int *auxY, long int *auxCb) {
     // Moving our file pointer to the bitmap data region.
     moveToBitmapData(file, bmpFile);
 
-    runlengthDescomp(getHeight(infoHeader), getWidth(infoHeader), compressed, auxY);
+    // runlengthDescomp(getHeight(infoHeader), getWidth(infoHeader), compressed, auxY);
 }

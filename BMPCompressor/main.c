@@ -67,7 +67,7 @@ int main(int argc, char const *argv[]) {
 
             timeBefore = timeAfter = 0; // initializing values
 
-            if(descompressor(auxY, auxCb, 0) > 0){
+            if(descompressor(auxY, auxCb) > 0){
                 timeAfter = clock();
                 duration = (timeAfter - timeBefore) / (double) CLOCKS_PER_SEC;
 
