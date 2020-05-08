@@ -79,6 +79,14 @@ int readBMPFileHeader(FILE *file, BMPFILEHEADER *fileHeader);
 */
 int readBMPInfoHeader(FILE *file, BMPINFOHEADER *infoHeader);
 
+/*
+    Auxiliar method to print headers content.
+
+    PARAMETERS:
+        - bmpFile: struct with bmp file header;
+        - bmpInfo: struct with bmp info header;
+*/
+void printHeader(BMPFILEHEADER *bmpFile, BMPINFOHEADER *bmpInfo);
 /* 
     Function to move to bitmap image data given a File header and its bfOffBits.
 

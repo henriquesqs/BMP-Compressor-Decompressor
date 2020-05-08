@@ -23,7 +23,8 @@ struct BMPINFOHEADER {
     unsigned int biClrImportant; /* Number of important colors */
 };
 
-double cosine[8][8]; // global variable to store cosine values to later be used in DCT
+// global variable to store cosine and constant values to later be used in DCT and IDCT
+double cosine[8][8], C[8];
 
 // Below, all the functions used to create our BMP compressor
 
@@ -34,6 +35,10 @@ void initCosLUT() {
             cosine[i][x] = 0;
             cosine[i][x] = cos(((((2.0 * i) + 1.0) * (x * PI)) / (16)));
         }
+        if (i)
+            C[i] = 1;
+        else
+            C[i] = 1 / sqrt(2);
     }
 }
 
@@ -66,13 +71,13 @@ int imageSize(BMPINFOHEADER *infoHeader) {
 
 long int fileSize(FILE *file) {
 
-    long int position = ftell(file);
+    long int position = ftell(file); // Saving file pointer current position;
 
-    fseek(file, 0, SEEK_END);
+    fseek(file, 0, SEEK_END); // Moving file pointer to the end of file;
 
-    long int size = ftell(file);
+    long int size = ftell(file); // Saving final position;
 
-    fseek(file, position, SEEK_SET);
+    fseek(file, position, SEEK_SET); // Moving gile pointer to its original position.
 
     return size;
 }
@@ -116,7 +121,8 @@ int readBMPInfoHeader(FILE *file, BMPINFOHEADER *IH) {
 }
 
 void moveToBitmapData(FILE *file, BMPFILEHEADER *FH) {
-    fseek(file, FH->bfOffBits, SEEK_SET);
+    // fseek(file, FH->bfOffBits, SEEK_SET);
+    fseek(file, 54, SEEK_SET);
 }
 
 unsigned char **allocMatrix(unsigned char **mat, int n, int m) {
@@ -225,18 +231,19 @@ void levelShift(double **mat, int offBits, int height, int width) {
 
 double **dct(double **dctCoefs, double **mat) {
 
-    float c1 = 0, c2 = 0, aux = 0;
+    // double c1 = 0, c2 = 0, aux = 0;
+    double aux = 0;
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
 
-            c1 = c2 = 1; // default value of consts
+            // c1 = c2 = 1; // default value of consts
 
-            if (i == 0)
-                c1 = (1 / sqrt(2));
+            // if (i == 0)
+            //     c1 = (1 / sqrt(2));
 
-            if (j == 0)
-                c2 = (1 / sqrt(2));
+            // if (j == 0)
+            //     c2 = (1 / sqrt(2));
 
             aux = 0; // aux variable to store sum values
 
@@ -247,7 +254,7 @@ double **dct(double **dctCoefs, double **mat) {
                 }
             }
 
-            dctCoefs[i][j] = c1 * c2 * 0.25 * aux;
+            dctCoefs[i][j] = C[i] * C[j] * 0.25 * aux;
         }
     }
 
@@ -266,8 +273,8 @@ double **divideMatrices(int lum, FILE *compressed, double **component, int heigh
     // On this next logical block, we are dividing 'component' into 8x8 matrices
     // in order to apply dct, quantization and vectorization into each one of them.
 
-    for (int i = 0; i < height / 8; i++) {
-        for (int j = 0; j < width / 8; j++) {
+    for (int i = 0; i < ceil(height / 8); i++) {
+        for (int j = 0; j < ceil(width / 8); j++) {
 
             for (int k = 0; k < 8; k++) {
                 for (int l = 0; l < 8; l++) {
@@ -448,6 +455,7 @@ void runlength(unsigned char *vector, FILE *file) {
 
         // Counting occurrences of current value (while avoiding buffer overflow).
         count = 1;
+
         while (i < 63 && vector[i] == vector[i + 1]) {
             count++;
             i++;
@@ -472,21 +480,43 @@ void runlength(unsigned char *vector, FILE *file) {
     }
 }
 
+void printHeader(BMPFILEHEADER *bmpFile, BMPINFOHEADER *bmpInfo) {
+
+    // Writing File Header data in stdout
+    printf("bfType: %d\n", bmpFile->bfType);
+    printf("bfSize: %d\n", bmpFile->bfSize);
+    printf("bfReserved1: %d\n", bmpFile->bfReserved1);
+    printf("bfReserved2: %d\n", bmpFile->bfReserved2);
+    printf("bfOffBits: %d\n", bmpFile->bfOffBits);
+
+    // Writing Info Header data in stdin
+    printf("biSize: %d\n", bmpInfo->biSize);
+    printf("biWidth: %d\n", bmpInfo->biWidth);
+    printf("biHeight: %d\n", bmpInfo->biHeight);
+    printf("biPlanes: %d\n", bmpInfo->biPlanes);
+    printf("biBitCount: %d\n", bmpInfo->biBitCount);
+    printf("biCompression: %d\n", bmpInfo->biCompression);
+    printf("biSizeImage: %d\n", bmpInfo->biSizeImage);
+    printf("biXPelsPerMeter: %d\n", bmpInfo->biXPelsPerMeter);
+    printf("biYPelsPerMeter: %d\n", bmpInfo->biYPelsPerMeter);
+    printf("biClrUsed: %d\n", bmpInfo->biClrUsed);
+    printf("biClrImportant: %d\n", bmpInfo->biClrImportant);
+}
+
 int compress(long int *auxY, long int *auxCb, double *compressRate) {
 
-    FILE *file = NULL;
     char fileName[51];
 
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
 
     printf("\nEnter image file name with bmp extension (for example: file.bmp) and max of 50 characters.\n");
-    printf("\nATTENTION!!! Please, read this before entering your image file name:\n\n- If your image is in images folder, please, type: images/nameOfImage.bmp\n- Otherwise, type nameOfImage.bmp\n");
+    printf("\nATTENTION!!! Please, read this before entering your image file name:\n\n- If your image is in images folder, please, type: images/nameOfImage.bmp\n- If its in root folder, type nameOfImage.bmp\n");
     printf("\nYour image file name: ");
     scanf("%50s", fileName);
 
     // file = fopen("images/8x8.bmp", "rb"); // Openning image that we want to compress.
-    file = fopen(fileName, "rb"); // Openning image that we want to compress.
+    FILE *file = fopen(fileName, "rb"); // Openning image that we want to compress.
 
     if (file == NULL) { // Checking if there was an error opening the image.
         printf("\nError reading file. Did you enter its correct name?");
@@ -498,6 +528,8 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     // Reading the bmp file header and info header so we can read image data without troubles.
     if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
         return ERROR;
+
+    // printHeader(bmpFile, bmpInfo); Prints headers content
 
     printf("Starting compression, please wait...\n");
 
@@ -511,7 +543,7 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     R = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
     G = allocMatrix(G, getHeight(bmpInfo), getWidth(bmpInfo));
     B = allocMatrix(B, getHeight(bmpInfo), getWidth(bmpInfo));
-
+    
     // Separates the bitmap data into its RGB components.
     separateComponents(file, bmpInfo, R, G, B);
 
@@ -534,10 +566,10 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     writeHeaders(bmpFile, bmpInfo, compressed);
 
     divideMatrices(1, compressed, Y, getHeight(bmpInfo), getWidth(bmpInfo));
-    auxY[0] = ftell(compressed);
+    *auxY = ftell(compressed);
 
     divideMatrices(0, compressed, Cb, getHeight(bmpInfo), getWidth(bmpInfo));
-    auxCb[0] = ftell(compressed);
+    *auxCb = ftell(compressed);
 
     divideMatrices(0, compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
@@ -545,10 +577,13 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     *compressRate = (100 - (100 * ((double)fileSize(compressed) / (double)fileSize(file))));
 
     // Free allocated memory.
+
     fclose(file);       // closes original image file
-    free(bmpFile);      // frees bmp file image header
-    free(bmpInfo);      // frees bmp info image header
     fclose(compressed); // closes compressed image file
+
+    free(bmpFile); // frees bmp file image header
+    free(bmpInfo); // frees bmp info image header
+
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));
@@ -561,63 +596,104 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
 
 // Below, functions used to create our descompressor
 
-double **idct(double **dctCoefs, double **mat) {
+void YcbcrTorgb(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr, int height, int width) {
 
-    float c1 = 0, c2 = 0, aux = 0;
+    float Kr = 0.299, Kb = 0.114;
 
-    for (int x = 0; x < 8; x++) {
-        for (int y = 0; y < 8; y++) {
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
 
-            c1 = c2 = 1; // default value of consts
+            R[i][j] = Y[i][j] + 1.402 * (Cr[i][j] - 128);
+            G[i][j] = Y[i][j] - 0.344136 * (Cb[i][j] - 128) - 0.714136 * (Cr[i][j] - 128);
+            B[i][j] = Y[i][j] + 1.772 * (Cb[i][j] - 128);
+        }
+    }
+}
 
-            aux = 0; // aux variable to store sum values
+double **idct(double **mat, int height, int width) {
 
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
+    double mat2[height][width];
+    double aux = 0;
+    // double c1 = 0, c2 = 0, aux = 0;
 
-                    if (i == 0)
-                        c1 = (1 / sqrt(2));
+    double **dctCoefs = allocDoubleMatrix(dctCoefs, height, width);
 
-                    if (j == 0)
-                        c2 = (1 / sqrt(2));
+    // First double 'for loop' divides mat into 8x8 pieces and save this slice in mat2
+    for (int a = 0; a < ceil(height / 8); a++) {
+        for (int b = 0; b < ceil(width / 8); b++) {
 
-                    aux += c1 * c2 * mat[i][j] * cosine[x][i] * cosine[y][j];
+            for (int x = 0; x < 8; x++) {
+                for (int y = 0; y < 8; y++) {
+
+                    mat2[x][y] = mat[a * 8 + x][b * 8 + y];
+
+                    // c1 = c2 = 1; // default value of consts
+
+                    aux = 0; // aux variable to store sum values
+
+                    for (int i = 0; i < 8; i++) {
+                        for (int j = 0; j < 8; j++) {
+
+                            // if (i == 0)
+                            //     c1 = (1 / sqrt(2));
+
+                            // if (j == 0)
+                            //     c2 = (1 / sqrt(2));
+
+                            aux += C[i] * C[j] * mat2[i][j] * cosine[x][i] * cosine[y][j];
+                        }
+                    }
+
+                    dctCoefs[x][y] = 0.25 * aux;
                 }
             }
-
-            dctCoefs[x][y] = 0.25 * aux;
         }
     }
 
     return dctCoefs;
 }
 
-float **runlengthDescomp(int height, int width, FILE *file, long int *aux) {
+double **runlengthDescomp(double **mat, FILE *file, int height, int width, long int aux) {
 
-    int counter = 0, times, value, x, y;
-    int **component = allocIntMatrix(component, height, width);
+    int stop = 0;         // This variable will be used to avoid buffer overflow.
+    int j = 0;            // This variable will control 'column' index of **mat.
+    unsigned char buffer; // This will store the char representation of counter.
+    unsigned char vector; // This will be used to stores the value.
+    int count = 0;
 
-    while (counter < aux[0] && !feof(file)) {
+    while (stop != 1 && ftell(file) < aux || !feof(file)) {
 
-        fread(&value, sizeof(int), 1, file);
-        fread(&times, sizeof(int), 1, file);
+        // Read value and its count in file
+        fread(&vector, sizeof(vector), 1, file);
+        fread(&buffer, sizeof(buffer), 1, file);
 
-        for (int i = 0; i < times; i++) {
-            component[x][y] = value;
+        count = buffer;
 
-            if (y < width - 1)
-                y++;
-            else if (x < height - 1) {
-                y = 0;
-                x++;
-            } else
-                break;
+        // As we stored count as an unsigned char, we need to convert it to integer
+        for (int i = 0; i < count; i++) {
+
+            mat[i][j] = vector; // saves value
+
+            if (j < height - 1) // checks buffer overflow
+                j++;
+            else /*if (i == height - 1)*/{ // checks buffer overflow
+                j = 0;
+                i++; 
+            } 
+            stop = 1; // indicates that the next loop will overflow
         }
-
-        counter++;
     }
 
-    freeIntMatrix(component, height);
+    return mat;
+}
+
+unsigned char convertion(int num) {
+    if (num > 255)
+        return 255;
+    else if (num < 0)
+        return 0;
+    else
+        return (unsigned char)num;
 }
 
 int descompressor(long int *auxY, long int *auxCb) {
@@ -628,7 +704,9 @@ int descompressor(long int *auxY, long int *auxCb) {
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
     BMPINFOHEADER *bmpInfo = (BMPINFOHEADER *)malloc(40);
 
-    printf("\nEnter image file name with bmp extension (for example: file.bmp) and max of 50 characters: ");
+    printf("\nEnter image file name with bin extension (for example: file.bin) and max of 50 characters.\n");
+    printf("\nATTENTION!!! Please, read this before entering your image file name:\n\n- If your image is in images folder, please, type: images/nameOfImage.bin\n- If its in root folder, type nameOfImage.bin\n");
+    printf("\nYour image file name: ");
     scanf("%50s", fileName);
 
     file = fopen(fileName, "rb"); // Openning image that we want to descompress.
@@ -638,12 +716,68 @@ int descompressor(long int *auxY, long int *auxCb) {
         return ERROR;
     }
 
+    printf("\nReading image metadata...\n");
+
     // Reading the bmp file header and info header so we can read image data without troubles.
     if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
         return ERROR;
 
+    printf("Starting descompression, please wait...\n");
+
     // Moving our file pointer to the bitmap data region.
     moveToBitmapData(file, bmpFile);
 
-    // runlengthDescomp(getHeight(infoHeader), getWidth(infoHeader), compressed, auxY);
+    // Starting descompression of run-length data
+    double **Y = NULL, **Cb = NULL, **Cr = NULL;
+
+    Y = allocDoubleMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = allocDoubleMatrix(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = allocDoubleMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    Y = runlengthDescomp(Y, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxY);
+    Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxY);
+    Cr = runlengthDescomp(Cr, file, getHeight(bmpInfo), getWidth(bmpInfo), EOF);
+
+    // Starting IDCT step
+    Y = idct(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = idct(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = idct(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    // Converting from YCbCr to RGB
+    unsigned char **R = NULL, **G = NULL, **B = NULL;
+
+    // Allocating enough memory to store R, G and B channels.
+    R = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
+    G = allocMatrix(G, getHeight(bmpInfo), getWidth(bmpInfo));
+    B = allocMatrix(B, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    YcbcrTorgb(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    // Starting writing in descompressed file
+    FILE *descompressed = fopen("descompressed.bmp", "wb+");
+
+    // Writing file and info header at the beginning of descompressed file
+    writeHeaders(bmpFile, bmpInfo, descompressed);
+
+    // Writing B, G and R component to file. 
+    // We take care of values lower 0 and greater 255 with convertion() function;
+    for (int i = 0; i < getHeight(bmpInfo); i++) {
+        for (int j = 0; j < getWidth(bmpInfo); j++) {
+            fputc(convertion(B[i][j]), descompressed);
+            fputc(convertion(G[i][j]), descompressed);
+            fputc(convertion(R[i][j]), descompressed);
+        }
+    }
+
+    free(bmpFile);
+    free(bmpInfo);
+    
+    fclose(file);
+    fclose(descompressed);
+    
+    freeDoubleMatrix(Y, getHeight(bmpInfo));
+    freeDoubleMatrix(Cb, getHeight(bmpInfo));
+    freeDoubleMatrix(Cr, getHeight(bmpInfo));
+
+    return 1;
 }
