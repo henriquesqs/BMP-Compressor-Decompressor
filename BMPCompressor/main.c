@@ -67,18 +67,18 @@ int main(int argc, char const *argv[]) {
 
             timeBefore = timeAfter = 0; // initializing values
 
-            // if(descompressor(bmpInfo, compressed, auxY, auxCb, 0) > 0){
-            //     timeAfter = clock() - timeBefore;
-            //     duration = (timeAfter - timeBefore) / CLOCKS_PER_SEC;
+            if(descompressor(auxY, auxCb, 0) > 0){
+                timeAfter = clock();
+                duration = (timeAfter - timeBefore) / (double) CLOCKS_PER_SEC;
 
-            //     printf("\nImage successfully descompressed in %.3lf seconds!\n", duration);
-            //     printf("The resulting file (descompressed.bmp) is located at the root of this project.\n");
+                printf("\nImage successfully descompressed in %.3lf seconds!\n", duration);
+                printf("The resulting file (descompressed.bmp) is located at the root of this project.\n");
 
-            // }
-            // else{
-            //     error = 1;
-            //     option = 0;
-            // }
+            }
+            else{
+                error = 1;
+                option = 0;
+            }
             break;
 
         default: // Default option: when users enters an invalid option

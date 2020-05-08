@@ -620,7 +620,7 @@ float **runlengthDescomp(int height, int width, FILE *file, long int *aux) {
     freeIntMatrix(component, height);
 }
 
-int descompressor(BMPINFOHEADER *infoHeader, FILE *compressed, long int *auxY, long int *auxCb) {
+int descompressor(FILE *compressed, long int *auxY, long int *auxCb) {
 
     FILE *file = NULL;
     char fileName[51];
