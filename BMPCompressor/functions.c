@@ -620,6 +620,21 @@ float **runlengthDescomp(int height, int width, FILE *file, long int *aux) {
     freeIntMatrix(component, height);
 }
 
+void YcbcrTorgb(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr, int height, int width) {
+
+    float Kr = 0.299, Kb = 0.114;
+
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+
+            R[i][j] = Y[i][j] +  1.402 * (Cr[i][j] - 128);
+            G[i][j] = Y[i][j] - 0.344136 * (Cb[i][j] - 128) - 0.714136 * (Cr[i][j] - 128);
+            B[i][j] = Y[i][j] + 1.772 * (Cb[i][j] - 128);
+        }
+    }
+}
+
+
 int descompressor(long int *auxY, long int *auxCb) {
 
     FILE *file = NULL;
