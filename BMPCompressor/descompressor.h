@@ -14,6 +14,6 @@ int descompressor(BMPINFOHEADER* infoHeader, FILE* file, long int* auxY, long in
 
 float** runlengthDescomp(int height, int width, FILE* file, long int* aux);
 
-float **idct(float **dctCoefs, float **mat);
+double **idct(double **dctCoefs, double **mat);
 
 #endif

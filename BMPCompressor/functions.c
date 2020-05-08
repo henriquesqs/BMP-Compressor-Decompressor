@@ -216,14 +216,14 @@ void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R
     }
 }
 
-void levelShift(float **mat, int offBits, int height, int width) {
+void levelShift(double **mat, int offBits, int height, int width) {
 
     for (int i = 0; i < height; i++)
         for (int j = 0; j < width; j++)
             mat[i][j] += offBits;
 }
 
-float **dct(float **dctCoefs, float **mat) {
+double **dct(double **dctCoefs, double **mat) {
 
     float c1 = 0, c2 = 0, aux = 0;
 
@@ -254,10 +254,10 @@ float **dct(float **dctCoefs, float **mat) {
     return dctCoefs;
 }
 
-float **divideMatrices(int lum, FILE *compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH) {
+double **divideMatrices(int lum, FILE *compressed, double **component, int height, int width) {
 
-    float **mat = allocFloatMatrix(mat, 8, 8);                  // 'mat' will allocate each 8x8 piece of component
-    float **dctCoefs = allocFloatMatrix(dctCoefs, 8, 8);        // 'dctCoefs' will temporally allocate values after dct
+    double **mat = allocDoubleMatrix(mat, 8, 8);                // 'mat' will allocate each 8x8 piece of component
+    double **dctCoefs = allocDoubleMatrix(dctCoefs, 8, 8);      // 'dctCoefs' will temporally allocate values after dct
     unsigned char *vector = malloc(64 * sizeof(unsigned char)); // 'vector' will be used to store values after vectorization
 
     // Applying level shift to 'component' in order to increase performance on the next steps
@@ -302,51 +302,49 @@ float **divideMatrices(int lum, FILE *compressed, float **component, int height,
 
             vectorization(vector, dctCoefs);
 
-            // Writing header from image before its compression.
-            writeHeaders(FH, IH, compressed);
-
             // Applying run-length to compress data on quantified vector. Also, we output the compressed file (compressed.bin)
             runlength(vector, compressed);
         }
     }
 
     free(vector);
-    freeFloatMatrix(mat, 8);
-    freeFloatMatrix(dctCoefs, 8);
+    freeDoubleMatrix(mat, 8);
+    freeDoubleMatrix(dctCoefs, 8);
 
     return component;
 }
 
-float **quantizationLuminance(float **component) {
+double **quantizationLuminance(double **component) {
 
     // LuminanceTable is applied in Y component
-    float luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
-                                  12, 12, 14, 19, 26, 58, 60, 55,
-                                  14, 13, 16, 24, 40, 57, 69, 56,
-                                  14, 17, 22, 29, 51, 87, 80, 62,
-                                  18, 22, 37, 56, 68, 109, 103, 77,
-                                  24, 35, 55, 64, 81, 104, 113, 92,
-                                  49, 64, 78, 87, 103, 121, 120, 101,
-                                  72, 92, 95, 98, 112, 100, 103, 99};
+    double luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
+                                   12, 12, 14, 19, 26, 58, 60, 55,
+                                   14, 13, 16, 24, 40, 57, 69, 56,
+                                   14, 17, 22, 29, 51, 87, 80, 62,
+                                   18, 22, 37, 56, 68, 109, 103, 77,
+                                   24, 35, 55, 64, 81, 104, 113, 92,
+                                   49, 64, 78, 87, 103, 121, 120, 101,
+                                   72, 92, 95, 98, 112, 100, 103, 99};
 
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
+
             component[i][j] = floor(component[i][j] / luminanceTable[i][j]);
 
     return component;
 }
 
-float **quantizationCrominance(float **component) {
+double **quantizationCrominance(double **component) {
 
     // Crominance is applied in Cb and Cr components
-    float crominanceTable[8][8] = {17, 18, 24, 47, 99, 99, 99, 99,
-                                   18, 21, 26, 66, 99, 99, 99, 99,
-                                   24, 26, 56, 99, 99, 99, 99, 99,
-                                   47, 66, 99, 99, 99, 99, 99, 99,
-                                   99, 99, 99, 99, 99, 99, 99, 99,
-                                   99, 99, 99, 99, 99, 99, 99, 99,
-                                   99, 99, 99, 99, 99, 99, 99, 99,
-                                   99, 99, 99, 99, 99, 99, 99, 99};
+    double crominanceTable[8][8] = {17, 18, 24, 47, 99, 99, 99, 99,
+                                    18, 21, 26, 66, 99, 99, 99, 99,
+                                    24, 26, 56, 99, 99, 99, 99, 99,
+                                    47, 66, 99, 99, 99, 99, 99, 99,
+                                    99, 99, 99, 99, 99, 99, 99, 99,
+                                    99, 99, 99, 99, 99, 99, 99, 99,
+                                    99, 99, 99, 99, 99, 99, 99, 99,
+                                    99, 99, 99, 99, 99, 99, 99, 99};
 
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 8; j++)
@@ -355,7 +353,7 @@ float **quantizationCrominance(float **component) {
     return component;
 }
 
-void vectorization(unsigned char *vector, float **mat) {
+void vectorization(unsigned char *vector, double **mat) {
 
     int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
     int steps = 0;        // Variable to avoid buffer overflow.
@@ -403,7 +401,7 @@ void vectorization(unsigned char *vector, float **mat) {
     }
 }
 
-void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float **Y, float **Cb, float **Cr, int height, int width) {
+void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr, int height, int width) {
 
     float Kr = 0.299, Kb = 0.114;
 
@@ -518,11 +516,11 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     separateComponents(file, bmpInfo, R, G, B);
 
     // Now we're going to convert from RGB to YCbCr to increase DCT performance.
-    float **Y = NULL, **Cb = NULL, **Cr = NULL;
+    double **Y = NULL, **Cb = NULL, **Cr = NULL;
 
-    Y = allocFloatMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cb = allocFloatMatrix(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cr = allocFloatMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+    Y = allocDoubleMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = allocDoubleMatrix(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = allocDoubleMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     rgbToYcbcr(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
@@ -532,35 +530,38 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
 
     FILE *compressed = fopen("compressed.bin", "wb+"); // File to save compressed image
 
-    Y = divideMatrices(1, compressed, Y, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    // Writing header from image before its compression.
+    writeHeaders(bmpFile, bmpInfo, compressed);
+
+    divideMatrices(1, compressed, Y, getHeight(bmpInfo), getWidth(bmpInfo));
     auxY[0] = ftell(compressed);
 
-    Cb = divideMatrices(0, compressed, Cb, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    divideMatrices(0, compressed, Cb, getHeight(bmpInfo), getWidth(bmpInfo));
     auxCb[0] = ftell(compressed);
 
-    Cr = divideMatrices(0, compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo), bmpInfo, bmpFile);
+    divideMatrices(0, compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Calculating compressRate
-    compressRate[0] = (100 - (100 * ((double)fileSize(compressed) / (double)fileSize(file))));
+    *compressRate = (100 - (100 * ((double)fileSize(compressed) / (double)fileSize(file))));
 
     // Free allocated memory.
-    fclose(file);
-    free(bmpFile);
-    free(bmpInfo);
-    fclose(compressed);
+    fclose(file);       // closes original image file
+    free(bmpFile);      // frees bmp file image header
+    free(bmpInfo);      // frees bmp info image header
+    fclose(compressed); // closes compressed image file
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));
-    freeFloatMatrix(Y, getHeight(bmpInfo));
-    freeFloatMatrix(Cb, getHeight(bmpInfo));
-    freeFloatMatrix(Cr, getHeight(bmpInfo));
+    freeDoubleMatrix(Y, getHeight(bmpInfo));
+    freeDoubleMatrix(Cb, getHeight(bmpInfo));
+    freeDoubleMatrix(Cr, getHeight(bmpInfo));
 
     return SUCCESS;
 }
 
 // Below, functions used to create our descompressor
 
-float **idct(float **dctCoefs, float **mat) {
+double **idct(double **dctCoefs, double **mat) {
 
     float c1 = 0, c2 = 0, aux = 0;
 

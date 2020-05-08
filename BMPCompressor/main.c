@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
     int error = 0;       // variable to control functions errors return.
     double duration = 0; // variable to store duration of compression and descompression functions.
 
-    double *compressRate = malloc(sizeof(double));  // variable to stores compression rate.
+    double compressRate;  // variable to stores compression rate.
     long int *auxY = malloc(1 * sizeof(long int));  // variable to auxiliate in descompression.
     long int *auxCb = malloc(1 * sizeof(long int)); // variable to auxiliate in descompression.
 
@@ -46,11 +46,11 @@ int main(int argc, char const *argv[]) {
             timeBefore = clock(); // saving time before starting image compression
 
             // If everything went right during compression, calculates its duration.
-            if (compress(auxY, auxCb, compressRate) > 0) {
-                timeAfter = clock() - timeBefore;                     // saving time after starting image compression
-                duration = (timeAfter - timeBefore) / CLOCKS_PER_SEC; // calculating duration of compression process
+            if (compress(auxY, auxCb, &compressRate) > 0) {
+                timeAfter = clock();                     // saving time after starting image compression
+                duration = (timeAfter - timeBefore) / (double) CLOCKS_PER_SEC; // calculating duration of compression process
 
-                printf("\nImage successfully compressed in %lf seconds with a compress rate of %.lf percent!\n", duration, compressRate[0]);
+                printf("\nImage successfully compressed in %lf seconds with a compress rate of %.lf percent!\n", duration, compressRate);
                 printf("The resulting file (compressed.bin) is located at the root of this project.\n");
             }
 
@@ -96,7 +96,7 @@ int main(int argc, char const *argv[]) {
     else
         printf("\nThanks for using our services! Have a nice day =)\n");
 
-    free(compressRate);
+    // free(compressRate);
     free(auxY);
     free(auxCb);
 

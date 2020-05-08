@@ -240,7 +240,7 @@ long int fileSize(FILE *file);
         - FH: struct with image file header.
     
 */
-float **divideMatrices(int lum, FILE *compressed, float **component, int height, int width, BMPINFOHEADER *IH, BMPFILEHEADER *FH);
+double **divideMatrices(int lum, FILE *compressed, double **component, int height, int width);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.
@@ -250,7 +250,7 @@ float **divideMatrices(int lum, FILE *compressed, float **component, int height,
         - dctCoefs: matrix where we're going to store dct result;
         - mat: matrix with coeffs we're going to apply dct.
 */
-float **dct(float **dctCoefs, float **mat);
+double **dct(double **dctCoefs, double **mat);
 
 /*
     Function responsible for apply a level shift in double matrices.
@@ -262,7 +262,7 @@ float **dct(float **dctCoefs, float **mat);
         - width: width of mat.
 
 */
-void levelShift(float **mat, int offBits, int height, int width);
+void levelShift(double **mat, int offBits, int height, int width);
 
 /*
     Function responsible for apply quantization in luminance components. 
@@ -272,7 +272,7 @@ void levelShift(float **mat, int offBits, int height, int width);
         - coefs: matrix with dct coefficients.
 
 */
-float **quantizationLuminance(float **coefs);
+double **quantizationLuminance(double **coefs);
 
 /*
     Function responsible for apply quantization in crominance components. 
@@ -282,7 +282,7 @@ float **quantizationLuminance(float **coefs);
         - coefs: matrix with dct coefficients.
 
 */
-float **quantizationCrominance(float **component);
+double **quantizationCrominance(double **component);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
@@ -292,7 +292,7 @@ float **quantizationCrominance(float **component);
         - vector: vector to store elements;
         - mat: matrix to apply vectorization.
 */
-void vectorization(unsigned char *vector, float **mat);
+void vectorization(unsigned char *vector, double **mat);
 
 /*
     Function responsible for converting from RGB channels to YCbCr.
@@ -307,7 +307,7 @@ void vectorization(unsigned char *vector, float **mat);
         - height: height of components;
         - width: width of components;
 */
-void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, float **Y, float **Cb, float **Cr, int height, int width);
+void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr, int height, int width);
 
 /*
     Function responsible for applying Run-Length Encondig (RLE), which is a technic to apply digital data compression.
