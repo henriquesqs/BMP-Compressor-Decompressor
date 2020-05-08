@@ -228,7 +228,8 @@ int imageSize(BMPINFOHEADER *infoHeader);
 long int fileSize(FILE *file);
 
 /*
-    Function responsible for dividing our image into its components (Y, Cb and Cr) which represents its channels.
+    Function responsible for dividing our image into 8x8 matrices and
+    apply dct, quantization, vectorization and run-length into each one of them.
 
     PARAMETERS:
         - lum: flag to indicate if its a luminance component or not;
@@ -236,8 +237,6 @@ long int fileSize(FILE *file);
         - component: component we want to divide and apply dct, quantization and run-length;
         - height: height of component;
         - width: width of component;
-        - IH: struct with image info header;
-        - FH: struct with image file header.
     
 */
 double **divideMatrices(int lum, FILE *compressed, double **component, int height, int width);
@@ -253,7 +252,7 @@ double **divideMatrices(int lum, FILE *compressed, double **component, int heigh
 double **dct(double **dctCoefs, double **mat);
 
 /*
-    Function responsible for apply a level shift in double matrices.
+    Function responsible for apply a level shift in a double matrix.
 
     PARAMETERS:
         - mat: matrix to apply level shift;
@@ -286,7 +285,7 @@ double **quantizationCrominance(double **component);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
-    This will help on next step as it puts zeros vector ending.
+    This will help on run-length codification step as it puts zeros at the ending of vector.
 
     PARAMETERS:
         - vector: vector to store elements;
@@ -329,11 +328,12 @@ void runlength(unsigned char *vector, FILE *file);
 void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file);
 
 /*
-    Function responsible for calling all the methods to do image compress.
+    Function responsible for calling all the methods to do bmp image compress.
 
     PAREMETERS:
         - auxY: auxiliar variable to stores where Y component (from YCbCr) will ends in compressed file;
         - auxCb: auxiliar variable to stores where Cb component (from YCbCr) will ends in compressed file;
+        - compressRate: pointer to a variable responsible to stores the compression rate.
 */
 int compress(long int *auxY, long int *auxCb, double *compressRate);
 
