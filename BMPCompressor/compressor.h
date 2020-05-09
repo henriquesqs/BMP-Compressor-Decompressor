@@ -235,19 +235,8 @@ int imageSize(BMPINFOHEADER *infoHeader);
 */
 long int fileSize(FILE *file);
 
-/*
-    Function responsible for dividing our image into 8x8 matrices and
-    apply dct, quantization, vectorization and run-length into each one of them.
-
-    PARAMETERS:
-        - lum: flag to indicate if its a luminance component or not;
-        - compressed: file to store compressed data;
-        - component: component we want to divide and apply dct, quantization and run-length;
-        - height: height of component;
-        - width: width of component;
-    
-*/
-double **divideMatrices(int lum, FILE *compressed, double **component, int height, int width);
+// emptying double matrices
+double **emptyDoubleMatrix(double **matrix, int height, int width);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.
@@ -257,7 +246,7 @@ double **divideMatrices(int lum, FILE *compressed, double **component, int heigh
         - dctCoefs: matrix where we're going to store dct result;
         - mat: matrix with coeffs we're going to apply dct.
 */
-double **dct(double **dctCoefs, double **mat);
+double **dct(double **component, int height, int width);
 
 /*
     Function responsible for apply a level shift in a double matrix.
@@ -279,7 +268,7 @@ void levelShift(double **mat, int offBits, int height, int width);
         - coefs: matrix with dct coefficients.
 
 */
-double **quantizationLuminance(double **coefs);
+double **quantizationLuminance(double **component, int height, int width);
 
 /*
     Function responsible for apply quantization in crominance components. 
@@ -289,7 +278,7 @@ double **quantizationLuminance(double **coefs);
         - coefs: matrix with dct coefficients.
 
 */
-double **quantizationCrominance(double **component);
+double **quantizationCrominance(double **component, int height, int width);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
@@ -324,6 +313,8 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double 
         - file: file to output compressed data.
 */
 void runlength(unsigned char *vector, FILE *file);
+
+void runlength2(double **dctCoefs, FILE *file, int height, int width);
 
 /*
     Function responsible for writing in 'file' the data inside BMPINFOHEADER and BMPINFOHEADER.
