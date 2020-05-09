@@ -1,0 +1,33 @@
+
+Enter your desired option:
+
+1. Compress an image;
+2. Descompress an image;
+
+0. Exit.
+
+Option: 
+Enter image file name with bmp extension (for example: file.bmp) and max of 50 characters.
+
+ATTENTION!!! Please, read this before entering your image file name:
+
+- If your image is in images folder, please, type: images/nameOfImage.bmp
+- If its in root folder, type nameOfImage.bmp
+
+Your image file name: 
+Reading image metadata...
+Starting compression, please wait...
+localização do ponteiro: 70
+
+Image successfully compressed in 0.718750 seconds with a compress rate of 31 percent!
+The resulting file (compressed.bin) is located at the root of this project.
+
+Enter your desired option:
+
+1. Compress an image;
+2. Descompress an image;
+
+0. Exit.
+
+Option: 
+Thanks for using our services! Have a nice day =)

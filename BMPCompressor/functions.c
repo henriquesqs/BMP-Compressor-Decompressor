@@ -458,54 +458,6 @@ void printComponent(double **component, int height, int width) {
     }
 }
 
-void vectorization(unsigned char *vector, double **mat) {
-
-    int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
-    int steps = 0;        // Variable to avoid buffer overflow.
-    int lin = 0, col = 0; // Variables to control lines and col from double**.
-
-    vector[steps++] = mat[lin][col];
-
-    while (steps < 64) {
-
-        if (lin == 0) { // it means we cant go up anymore
-
-            if (dir < 0) {
-                col++;
-                vector[steps++] = mat[lin][col];
-                dir *= -1;
-            }
-
-            else {
-                while (col > 0) {
-                    lin++;
-                    col--;
-                    vector[steps++] = mat[lin][col];
-                }
-            }
-        }
-
-        else if (col == 0) {
-
-            if (dir > 0) {
-                lin++;
-                if (lin == 8)
-                    break;
-                vector[steps++] = mat[lin][col];
-                dir *= -1;
-            }
-
-            else {
-                while (lin > 0 && col < 8) {
-                    lin--;
-                    col++;
-                    vector[steps++] = mat[lin][col];
-                }
-            }
-        }
-    }
-}
-
 int compress(double *compressRate) {
 
     char fileName[51];
@@ -585,7 +537,7 @@ int compress(double *compressRate) {
     Cb = quantizationLuminance(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
     Cr = quantizationLuminance(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // Applying ru  n-length on components
+    // Applying run-length on components
     runlength(Y, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
     auxY = ftell(compressed);
 
@@ -786,22 +738,20 @@ int descompressor() {
 
     // Reading aux values to auxiliate in descompression
     long int auxY = 0, auxCb = 0;
-    
+
     fread(&auxY, sizeof(auxY), 1, file);
     fread(&auxCb, sizeof(auxCb), 1, file);
-    printf("\nauxY: %ld e auxCb: %ld\n", auxY, auxCb);
 
     // Creating and allocating data in variables below to store Y, Cb and Cr components.
     double **Y = NULL, **Cb = NULL, **Cr = NULL;
-
-    Y = allocDoubleMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    
+    Y = allocDoubleMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo)); 
     Cb = allocDoubleMatrix(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
     Cr = allocDoubleMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Starting descompression of run-length data
     Y = runlengthDescomp(Y, file, getHeight(bmpInfo), getWidth(bmpInfo), auxY);
-    printComponent(Y, getHeight(bmpInfo), getWidth(bmpInfo));
-    printf("\nauxY: %ld\n", auxY);
+    // printComponent(Y, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxCb);
     // Cr = runlengthDescomp(Cr, file, getHeight(bmpInfo), getWidth(bmpInfo), EOF);
