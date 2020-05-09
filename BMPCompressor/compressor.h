@@ -346,6 +346,6 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file);
         - auxCb: auxiliar variable to stores where Cb component (from YCbCr) will ends in compressed file;
         - compressRate: pointer to a variable responsible to stores the compression rate.
 */
-int compress(long int *auxY, long int *auxCb, double *compressRate);
+int compress(double *compressRate);
 
 #endif

@@ -506,7 +506,7 @@ void vectorization(unsigned char *vector, double **mat) {
     }
 }
 
-int compress(long int *auxY, long int *auxCb, double *compressRate) {
+int compress(double *compressRate) {
 
     char fileName[51];
 
@@ -518,7 +518,6 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     printf("\nYour image file name: ");
     scanf("%50s", fileName);
 
-    // file = fopen("images/8x8.bmp", "rb"); // Openning image that we want to compress.
     FILE *file = fopen(fileName, "rb"); // Openning image that we want to compress.
 
     if (file == NULL) { // Checking if there was an error opening the image.
@@ -531,8 +530,6 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     // Reading the bmp file header and info header so we can read image data without troubles.
     if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
         return ERROR;
-
-    // printHeader(bmpFile, bmpInfo); Prints headers content
 
     printf("Starting compression, please wait...\n");
 
@@ -573,6 +570,11 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     // Making sure that we are writing data at the correct place (after the 54 first bytes).
     moveToBitmapData(compressed, bmpFile);
 
+    // Saving aux values to help in descompress process
+    long int auxY = 0, auxCb = 0;
+    fwrite(&auxY, sizeof(auxY), 1, compressed);
+    fwrite(&auxCb, sizeof(auxY), 1, compressed);
+
     // Applying dct on components
     Y = dct(Y, getHeight(bmpInfo), getWidth(bmpInfo));
     Cb = dct(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
@@ -583,13 +585,19 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     Cb = quantizationLuminance(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
     Cr = quantizationLuminance(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
+    // Applying ru  n-length on components
     runlength(Y, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
-    *auxY = ftell(compressed);
+    auxY = ftell(compressed);
 
     runlength(Cb, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
-    *auxCb = ftell(compressed);
+    auxCb = ftell(compressed);
 
     runlength(Cr, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    // Moving our file pointer to where we saved the aux values and rewriting them
+    fseek(compressed, 54, SEEK_SET);
+    fwrite(&auxY, sizeof(auxY), 1, compressed);
+    fwrite(&auxCb, sizeof(auxY), 1, compressed);
 
     // Calculating compressRate
     *compressRate = (100 - (100 * ((double)fileSize(compressed) / (double)fileSize(file))));
@@ -746,9 +754,8 @@ double **quantizationCrominanceDescomp(double **component, int height, int width
     return component;
 }
 
-int descompressor(long int *auxY, long int *auxCb) {
+int descompressor() {
 
-    FILE *file = NULL;
     char fileName[51];
 
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
@@ -759,7 +766,7 @@ int descompressor(long int *auxY, long int *auxCb) {
     printf("\nYour image file name: ");
     scanf("%50s", fileName);
 
-    file = fopen(fileName, "rb"); // Openning image that we want to descompress.
+    FILE *file = fopen(fileName, "rb"); // Openning image that we want to descompress.
 
     if (file == NULL) { // Checking if there was an error opening the image.
         printf("\nError reading file. Did you enter its correct name?");
@@ -777,6 +784,13 @@ int descompressor(long int *auxY, long int *auxCb) {
     // Moving our file pointer to the bitmap data region.
     moveToBitmapData(file, bmpFile);
 
+    // Reading aux values to auxiliate in descompression
+    long int auxY = 0, auxCb = 0;
+    
+    fread(&auxY, sizeof(auxY), 1, file);
+    fread(&auxCb, sizeof(auxCb), 1, file);
+    printf("\nauxY: %ld e auxCb: %ld\n", auxY, auxCb);
+
     // Creating and allocating data in variables below to store Y, Cb and Cr components.
     double **Y = NULL, **Cb = NULL, **Cr = NULL;
 
@@ -785,8 +799,9 @@ int descompressor(long int *auxY, long int *auxCb) {
     Cr = allocDoubleMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Starting descompression of run-length data
-    Y = runlengthDescomp(Y, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxY);
+    Y = runlengthDescomp(Y, file, getHeight(bmpInfo), getWidth(bmpInfo), auxY);
     printComponent(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    printf("\nauxY: %ld\n", auxY);
 
     // Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxCb);
     // Cr = runlengthDescomp(Cr, file, getHeight(bmpInfo), getWidth(bmpInfo), EOF);

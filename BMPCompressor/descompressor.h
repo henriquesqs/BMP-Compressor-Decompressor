@@ -8,7 +8,7 @@
         - auxY: aux variable responsible for storing where Y component ends in file;
         - auxCb: aux variable responsible for storing where Cb component ends in file.
 */
-int descompressor(long int *auxY, long int *auxCb);
+int descompressor();
 
 double **runlengthDescomp(double **mat, FILE *file, int height, int width, long int aux);
 

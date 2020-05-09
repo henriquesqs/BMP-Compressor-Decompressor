@@ -16,12 +16,10 @@ void menu() {
 
 int main(int argc, char const *argv[]) {
 
-    int option = 0;      // Variable to store users option.
-    int error = 0;       // Variable to control functions errors return.
-    double duration = 0; // Variable to store duration of compression and descompression functions.
-
-    long int auxY, auxCb; // Variables to auxiliate in descompression.
-    double compressRate;  // Variable to stores compression rate.
+    int error = 0;           // Variable to control functions errors return.
+    int option = 0;          // Variable to store users option.
+    double duration = 0;     // Variable to store duration of compression and descompression functions.
+    double compressRate = 0; // Variable to stores compression rate.
 
     clock_t timeBefore = 0, timeAfter = 0; // Variables to control compression and descompression running time.
 
@@ -46,7 +44,7 @@ int main(int argc, char const *argv[]) {
             timeBefore = clock(); // Saving time before starting image compression.
 
             // If everything went right during compression, calculates its duration.
-            if (compress(&auxY, &auxCb, &compressRate) > 0) {
+            if (compress(&compressRate) > 0) {
                 timeAfter = clock();                                          // saving time after starting image compression
                 duration = (timeAfter - timeBefore) / (double)CLOCKS_PER_SEC; // calculating duration of compression process
 
@@ -69,7 +67,7 @@ int main(int argc, char const *argv[]) {
 
             timeBefore = clock();
 
-            if (descompressor(&auxY, &auxCb) > 0) {
+            if (descompressor() > 0) {
                 timeAfter = clock();
                 duration = (timeAfter - timeBefore) / (double)CLOCKS_PER_SEC;
 
