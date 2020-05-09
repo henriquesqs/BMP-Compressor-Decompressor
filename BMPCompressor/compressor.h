@@ -249,6 +249,9 @@ long int fileSize(FILE *file);
 */
 double **divideMatrices(int lum, FILE *compressed, double **component, int height, int width);
 
+// pra testar
+void printComponent(double **component, int height, int width);
+
 /*
     Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.
     These regions are ready to be compressed without any lose of image quality.
@@ -257,7 +260,7 @@ double **divideMatrices(int lum, FILE *compressed, double **component, int heigh
         - dctCoefs: matrix where we're going to store dct result;
         - mat: matrix with coeffs we're going to apply dct.
 */
-double **dct(double **dctCoefs, double **mat);
+double **dct(double **compont, int height, int width);
 
 /*
     Function responsible for apply a level shift in a double matrix.
@@ -279,7 +282,7 @@ void levelShift(double **mat, int offBits, int height, int width);
         - coefs: matrix with dct coefficients.
 
 */
-double **quantizationLuminance(double **coefs);
+double **quantizationLuminance(double **component, int height, int width);
 
 /*
     Function responsible for apply quantization in crominance components. 
@@ -289,7 +292,7 @@ double **quantizationLuminance(double **coefs);
         - coefs: matrix with dct coefficients.
 
 */
-double **quantizationCrominance(double **component);
+double **quantizationCrominance(double **component, int height, int width);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
@@ -323,7 +326,8 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double 
         - vector: vector with data to compress;
         - file: file to output compressed data.
 */
-void runlength(unsigned char *vector, FILE *file);
+// void runlength(unsigned char *vector, FILE *file);
+void runlength(double **dctCoefs, FILE *file);
 
 /*
     Function responsible for writing in 'file' the data inside BMPINFOHEADER and BMPINFOHEADER.
