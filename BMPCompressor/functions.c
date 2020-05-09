@@ -341,41 +341,6 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file) {
     fwrite(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 }
 
-// void runlength2(unsigned char *vector, FILE *file) {
-
-//     int count = 0;        // This variable will count occurrences of the same value until a different one is found.
-//     char binary[9];       // This will stores the binary representation of 'count'.
-//     unsigned char buffer; // This will stores the char representation of binary, i.e, count.
-
-//     for (int i = 1; i < 64; i++) { // 'i' starts at position 1 because position 0 has a DC coefficient and run-length must be applied in AC coefficientes
-
-//         // Counting occurrences of current value (while avoiding buffer overflow).
-//         count = 1;
-
-//         while (i < 63 && vector[i] == vector[i + 1]) {
-//             count++;
-//             i++;
-//         }
-
-//         // When finds a different value, starts preparation to
-//         // write the previous value and its count in file.
-
-//         // Converting count to binary
-//         // Thanks to Fifi from StackOverflow for his answer (https://stackoverflow.com/a/58940759/10304974) :)
-//         for (int j = 0; j < 8; j++)
-//             binary[j] = (count & (int)1 << (8 - j - 1)) ? '1' : '0';
-//         binary[8] = '\0';
-
-//         // Transfers binary[] data to 1 byte (thanks to Professor Rudinei Goularte for this)
-//         for (int j = 0; j < 8; j++)
-//             buffer = (buffer << 1) | (binary[j] == '1');
-
-//         // Writes value and its count in file
-//         fwrite(&vector[i], sizeof(vector[i]), 1, file);
-//         fwrite(&buffer, sizeof(buffer), 1, file);
-//     }
-// }
-
 void runlength(double **dctCoefs, FILE *file, int height, int width) {
 
     int count = 0;              // This variable will count occurrences of the same value until a different one is found.
@@ -744,16 +709,15 @@ int descompressor() {
 
     // Creating and allocating data in variables below to store Y, Cb and Cr components.
     double **Y = NULL, **Cb = NULL, **Cr = NULL;
-    
-    Y = allocDoubleMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo)); 
+
+    Y = allocDoubleMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo));
     Cb = allocDoubleMatrix(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
     Cr = allocDoubleMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Starting descompression of run-length data
     Y = runlengthDescomp(Y, file, getHeight(bmpInfo), getWidth(bmpInfo), auxY);
-    // printComponent(Y, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxCb);
+    // Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), auxCb);
     // Cr = runlengthDescomp(Cr, file, getHeight(bmpInfo), getWidth(bmpInfo), EOF);
 
     // // Starting to undo quantization
