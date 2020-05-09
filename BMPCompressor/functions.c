@@ -341,90 +341,90 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file) {
     fwrite(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 }
 
-void runlength(unsigned char *vector, FILE *file) {
+// void runlength2(unsigned char *vector, FILE *file) {
 
-    int count = 0;        // This variable will count occurrences of the same value until a different one is found.
-    char binary[9];       // This will stores the binary representation of 'count'.
-    unsigned char buffer; // This will stores the char representation of binary, i.e, count.
+//     int count = 0;        // This variable will count occurrences of the same value until a different one is found.
+//     char binary[9];       // This will stores the binary representation of 'count'.
+//     unsigned char buffer; // This will stores the char representation of binary, i.e, count.
 
-    for (int i = 1; i < 64; i++) { // 'i' starts at position 1 because position 0 has a DC coefficient and run-length must be applied in AC coefficientes
+//     for (int i = 1; i < 64; i++) { // 'i' starts at position 1 because position 0 has a DC coefficient and run-length must be applied in AC coefficientes
 
-        // Counting occurrences of current value (while avoiding buffer overflow).
-        count = 1;
+//         // Counting occurrences of current value (while avoiding buffer overflow).
+//         count = 1;
 
-        while (i < 63 && vector[i] == vector[i + 1]) {
-            count++;
-            i++;
-        }
-
-        // When finds a different value, starts preparation to
-        // write the previous value and its count in file.
-
-        // Converting count to binary
-        // Thanks to Fifi from StackOverflow for his answer (https://stackoverflow.com/a/58940759/10304974) :)
-        for (int j = 0; j < 8; j++)
-            binary[j] = (count & (int)1 << (8 - j - 1)) ? '1' : '0';
-        binary[8] = '\0';
-
-        // Transfers binary[] data to 1 byte (thanks to Professor Rudinei Goularte for this)
-        for (int j = 0; j < 8; j++)
-            buffer = (buffer << 1) | (binary[j] == '1');
-
-        // Writes value and its count in file
-        fwrite(&vector[i], sizeof(vector[i]), 1, file);
-        fwrite(&buffer, sizeof(buffer), 1, file);
-    }
-}
-
-// void runlength(double **dctCoefs, FILE *file, int height, int width) {
-
-//     int count = 0;              // This variable will count occurrences of the same value until a different one is found.
-//     char binary[9], binary2[9]; // This will stores the binary representation of 'count'.
-//     char buffer, buffer2;       // This will stores the char representation of binary, i.e, count.
-//     int value;
-
-//     for (int i = 0; i < height; i++) {
-//         for (int j = 0; j < width; j++) {
-
-//             // Counting occurrences of current value (while avoiding buffer overflow).
-//             count = 1;
-
-//             if (i == j == 0) // run-length must be applied only on DC coefficientes
-//                 j++;
-
-//             while (j + 1 < width && dctCoefs[i][j] == dctCoefs[i][j + 1]) {
-//                 count++;
-//                 j++;
-//             }
-
-//             value = dctCoefs[i][j];
-
-//             /* Converting count to binary */
-
-//             // Thanks to Fifi from StackOverflow for his answer (https://stackoverflow.com/a/58940759/10304974) :)
-//             for (int k = 0; k < 8; k++)
-//                 binary[k] = (count & (int)1 << (8 - k - 1)) ? '1' : '0';
-//             binary[8] = '\0';
-
-//             // Transfers binary[] data to 1 byte (thanks to Professor Rudinei Goularte for this)
-//             for (int k = 0; k < 8; k++)
-//                 buffer = (buffer << 1) | (binary[k] == '1');
-
-//             /* Converting value to binary */
-
-//             for (int k = 0; k < 8; k++)
-//                 binary2[k] = (value & (int)1 << (8 - k - 1)) ? '1' : '0';
-//             binary2[8] = '\0';
-
-//             for (int k = 0; k < 8; k++)
-//                 buffer2 = (buffer2 << 1) | (binary2[k] == '1');
-
-//             // Writes value and its count in file
-//             fwrite(&buffer2, sizeof(buffer2), 1, file);
-//             fwrite(&buffer, sizeof(buffer), 1, file);
+//         while (i < 63 && vector[i] == vector[i + 1]) {
+//             count++;
+//             i++;
 //         }
+
+//         // When finds a different value, starts preparation to
+//         // write the previous value and its count in file.
+
+//         // Converting count to binary
+//         // Thanks to Fifi from StackOverflow for his answer (https://stackoverflow.com/a/58940759/10304974) :)
+//         for (int j = 0; j < 8; j++)
+//             binary[j] = (count & (int)1 << (8 - j - 1)) ? '1' : '0';
+//         binary[8] = '\0';
+
+//         // Transfers binary[] data to 1 byte (thanks to Professor Rudinei Goularte for this)
+//         for (int j = 0; j < 8; j++)
+//             buffer = (buffer << 1) | (binary[j] == '1');
+
+//         // Writes value and its count in file
+//         fwrite(&vector[i], sizeof(vector[i]), 1, file);
+//         fwrite(&buffer, sizeof(buffer), 1, file);
 //     }
 // }
+
+void runlength(double **dctCoefs, FILE *file, int height, int width) {
+
+    int count = 0;              // This variable will count occurrences of the same value until a different one is found.
+    char binary[9], binary2[9]; // This will stores the binary representation of 'count'.
+    char buffer, buffer2;       // This will stores the char representation of binary, i.e, count.
+    int value;
+
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+
+            // Counting occurrences of current value (while avoiding buffer overflow).
+            count = 1;
+
+            if (i == j == 0) // run-length must be applied only on DC coefficientes
+                j++;
+
+            while (j + 1 < width && dctCoefs[i][j] == dctCoefs[i][j + 1]) {
+                count++;
+                j++;
+            }
+
+            value = dctCoefs[i][j];
+
+            /* Converting count to binary */
+
+            // Thanks to Fifi from StackOverflow for his answer (https://stackoverflow.com/a/58940759/10304974) :)
+            for (int k = 0; k < 8; k++)
+                binary[k] = (count & (int)1 << (8 - k - 1)) ? '1' : '0';
+            binary[8] = '\0';
+
+            // Transfers binary[] data to 1 byte (thanks to Professor Rudinei Goularte for this)
+            for (int k = 0; k < 8; k++)
+                buffer = (buffer << 1) | (binary[k] == '1');
+
+            /* Converting value to binary */
+
+            for (int k = 0; k < 8; k++)
+                binary2[k] = (value & (int)1 << (8 - k - 1)) ? '1' : '0';
+            binary2[8] = '\0';
+
+            for (int k = 0; k < 8; k++)
+                buffer2 = (buffer2 << 1) | (binary2[k] == '1');
+
+            // Writes value and its count in file
+            fwrite(&buffer2, sizeof(buffer2), 1, file);
+            fwrite(&buffer, sizeof(buffer), 1, file);
+        }
+    }
+}
 
 void printHeader(BMPFILEHEADER *bmpFile, BMPINFOHEADER *bmpInfo) {
 
@@ -583,38 +583,18 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     Cb = quantizationLuminance(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
     Cr = quantizationLuminance(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    char vector[64];
-    double **slice = allocDoubleMatrix(slice, 8, 8);
+    runlength(Y, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
+    *auxY = ftell(compressed);
 
-    // Applying run-length on components
+    runlength(Cb, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
+    *auxCb = ftell(compressed);
 
-    for (int a = 0; a < ceil(getHeight(bmpInfo) / 8); a++) {
-        for (int b = 0; b < ceil(getWidth(bmpInfo) / 8); b++) {
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    slice[i][j] = Y[a * 8 + i][b * 8 + j];
-                    vectorization(vector, slice);
-                }
-            }
-        }
-    }
-    
-    runlength(vector, compressed);
-    freeDoubleMatrix(slice, 8);
-
-    // runlength(Y, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
-    // *auxY = ftell(compressed);
-
-    // runlength(Cb, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
-    // *auxCb = ftell(compressed);
-
-    // runlength(Cr, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
+    runlength(Cr, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Calculating compressRate
     *compressRate = (100 - (100 * ((double)fileSize(compressed) / (double)fileSize(file))));
 
     // Free allocated memory.
-
     fclose(file);       // closes original image file
     fclose(compressed); // closes compressed image file
 
@@ -680,10 +660,10 @@ double **idct(double **mat, int height, int width) {
 
 double **runlengthDescomp(double **mat, FILE *file, int height, int width, long int aux) {
 
-    int stop = 0;         // This variable will be used to avoid buffer overflow.
-    int j = 0;            // This variable will control 'column' index of **mat.
-    unsigned char buffer; // This will store the char representation of counter.
-    unsigned char vector; // This will be used to stores the value.
+    int j = 0;    // This variable will control 'column' index of **mat.
+    char buffer;  // This will store the char representation of counter.
+    char vector;  // This will be used to stores the value.
+    int stop = 0; // This variable will be used to avoid buffer overflow.
     int count = 0;
 
     while (stop != 1 && ftell(file) < aux || !feof(file)) {
@@ -807,12 +787,7 @@ int descompressor(long int *auxY, long int *auxCb) {
     // Starting descompression of run-length data
     Y = runlengthDescomp(Y, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxY);
 
-    for (int i = 0; i < getHeight(bmpInfo); i++) {
-        for (int j = 0; j < getWidth(bmpInfo); j++) {
-            printf("%f ", Y[i][j]);
-        }
-        printf("\n");
-    }
+    printComponent(Y, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxCb);
     // Cr = runlengthDescomp(Cr, file, getHeight(bmpInfo), getWidth(bmpInfo), EOF);
