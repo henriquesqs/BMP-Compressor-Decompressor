@@ -326,8 +326,8 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double 
         - vector: vector with data to compress;
         - file: file to output compressed data.
 */
-// void runlength(unsigned char *vector, FILE *file);
-void runlength(double **dctCoefs, FILE *file);
+void runlength(unsigned char *vector, FILE *file);
+// void runlength(double **dctCoefs, FILE *file, int height, int width);
 
 /*
     Function responsible for writing in 'file' the data inside BMPINFOHEADER and BMPINFOHEADER.
