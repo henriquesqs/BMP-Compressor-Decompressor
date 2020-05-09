@@ -660,24 +660,24 @@ double **idct(double **mat, int height, int width) {
 
 double **runlengthDescomp(double **mat, FILE *file, int height, int width, long int aux) {
 
-    int j = 0;    // This variable will control 'column' index of **mat.
-    char buffer;  // This will store the char representation of counter.
-    char vector;  // This will be used to stores the value.
-    int stop = 0; // This variable will be used to avoid buffer overflow.
-    int count = 0;
+    int j = 0;        // This variable will control 'column' index of **mat.
+    int stop = 0;     // This variable will be used to avoid buffer overflow.
+    int count = 0;    // This will store counter as an int.
+    char value = 0;   // This will be used to stores the value.
+    char counter = 0; // This will store the char representation of counter.
 
     while (stop != 1 && ftell(file) < aux || !feof(file)) {
 
         // Read value and its count in file
-        fread(&vector, sizeof(vector), 1, file);
-        fread(&buffer, sizeof(buffer), 1, file);
+        fread(&value, sizeof(char), 1, file);
+        fread(&counter, sizeof(char), 1, file);
 
-        count = buffer;
+        count = counter;
 
         // As we stored count as an unsigned char, we need to convert it to integer
         for (int i = 0; i < count; i++) {
 
-            mat[i][j] = vector; // saves value
+            mat[i][j] = value; // saves value
 
             if (j < width - 1) // checks buffer overflow
                 j++;
@@ -786,7 +786,6 @@ int descompressor(long int *auxY, long int *auxCb) {
 
     // Starting descompression of run-length data
     Y = runlengthDescomp(Y, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxY);
-
     printComponent(Y, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxCb);
