@@ -150,6 +150,11 @@ int **allocIntMatrix(int **mat, int n, int m) {
     for (int i = 0; i < n; i++)
         mat[i] = malloc(m * sizeof(int));
 
+    // Initializing mat
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            mat[i][j] = 0;
+
     return mat;
 }
 
@@ -159,6 +164,11 @@ double **allocDoubleMatrix(double **mat, int n, int m) {
 
     for (int i = 0; i < n; i++)
         mat[i] = malloc(m * sizeof(double));
+
+    // Initializing mat
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            mat[i][j] = 0;
 
     return mat;
 }
@@ -245,11 +255,9 @@ double **dct(double **mat, int height, int width) {
 
                     for (int i = 0; i < 8; i++) {
                         for (int j = 0; j < 8; j++) {
-
                             aux += mat[a * 8 + i][b * 8 + j] * cosine[i][x] * cosine[j][y];
                         }
                     }
-
                     dctCoefs[a * 8 + x][b * 8 + y] = C[x] * C[y] * 0.25 * aux;
                 }
             }
@@ -343,21 +351,24 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file) {
 
 void runlength(double **dctCoefs, FILE *file, int height, int width) {
 
-    int count = 0;              // This variable will count occurrences of the same value until a different one is found.
-    char binary[9], binary2[9]; // This will stores the binary representation of 'count'.
-    char buffer, buffer2;       // This will stores the char representation of binary, i.e, count.
-    int value;
+    short count = 0; // This variable will count occurrences of the same value until a different one is found.
+    short value = 0;
+    char buffer;       // This will stores the char representation of binary, i.e, count.
+    char binary[9]; // This will stores the binary representation of 'count'.
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
 
+            // emptying vars
+            for (int i = 0; i < 8; i++) 
+                binary[i] = '0';
+
             // Counting occurrences of current value (while avoiding buffer overflow).
             count = 1;
-
-            if (i == j == 0) // run-length must be applied only on DC coefficientes
+            if (i == 0 && j == 0) // run-length must be applied only on DC coefficientes
                 j++;
 
-            while (j + 1 < width && dctCoefs[i][j] == dctCoefs[i][j + 1]) {
+            while (j < width && dctCoefs[i][j - 1] == dctCoefs[i][j]) {
                 count++;
                 j++;
             }
@@ -365,28 +376,18 @@ void runlength(double **dctCoefs, FILE *file, int height, int width) {
             value = dctCoefs[i][j];
 
             /* Converting count to binary */
+            for (int i = 0; i < 8; i++) {
+                binary[i] = (count & 1) + '0';
+                count >>= 1;
+            }
 
-            // Thanks to Fifi from StackOverflow for his answer (https://stackoverflow.com/a/58940759/10304974) :)
-            for (int k = 0; k < 8; k++)
-                binary[k] = (count & (int)1 << (8 - k - 1)) ? '1' : '0';
-            binary[8] = '\0';
-
-            // Transfers binary[] data to 1 byte (thanks to Professor Rudinei Goularte for this)
-            for (int k = 0; k < 8; k++)
+            // Transfers binary[] data to 1 byte
+            for (int k = 7; k >= 0; k--)
                 buffer = (buffer << 1) | (binary[k] == '1');
 
-            /* Converting value to binary */
-
-            for (int k = 0; k < 8; k++)
-                binary2[k] = (value & (int)1 << (8 - k - 1)) ? '1' : '0';
-            binary2[8] = '\0';
-
-            for (int k = 0; k < 8; k++)
-                buffer2 = (buffer2 << 1) | (binary2[k] == '1');
-
             // Writes value and its count in file
-            fwrite(&buffer2, sizeof(buffer2), 1, file);
-            fwrite(&buffer, sizeof(buffer), 1, file);
+            fwrite(&value, sizeof(value), 1, file);   // writes value
+            fwrite(&buffer, sizeof(buffer), 1, file); // writes count
         }
     }
 }
@@ -503,6 +504,7 @@ int compress(double *compressRate) {
     Cr = quantizationLuminance(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Applying run-length on components
+    // printComponent(Y, getHeight(bmpInfo), getWidth(bmpInfo));
     runlength(Y, compressed, getHeight(bmpInfo), getWidth(bmpInfo));
     auxY = ftell(compressed);
 
@@ -515,6 +517,8 @@ int compress(double *compressRate) {
     fseek(compressed, 54, SEEK_SET);
     fwrite(&auxY, sizeof(auxY), 1, compressed);
     fwrite(&auxCb, sizeof(auxY), 1, compressed);
+
+    // Y = runlengthDescomp(Y, compressed, getHeight(bmpInfo), getWidth(bmpInfo), auxY);
 
     // Calculating compressRate
     *compressRate = (100 - (100 * ((double)fileSize(compressed) / (double)fileSize(file))));
@@ -546,7 +550,7 @@ void YcbcrTorgb(unsigned char **R, unsigned char **G, unsigned char **B, double 
         for (int j = 0; j < width; j++) {
 
             R[i][j] = convertion(Y[i][j] + (1.402 * Cr[i][j]));
-            printf("value: %lf e valor no R: %d\n", Y[i][j] + (1.402 * Cr[i][j]), R[i][j]);
+            // printf("value: %lf e valor no R: %d\n", Y[i][j] + (1.402 * Cr[i][j]), R[i][j]);
             G[i][j] = convertion(Y[i][j] - (0.344 * Cb[i][j]) - (0.714 * Cr[i][j]));
             B[i][j] = convertion(Y[i][j] + (1.772 * Cb[i][j]));
         }
@@ -585,32 +589,41 @@ double **idct(double **mat, int height, int width) {
 
 double **runlengthDescomp(double **mat, FILE *file, int height, int width, long int aux) {
 
-    int j = 0;        // This variable will control 'column' index of **mat.
-    int stop = 0;     // This variable will be used to avoid buffer overflow.
-    int count = 0;    // This will store counter as an int.
-    char value = 0;   // This will be used to stores the value.
-    char counter = 0; // This will store the char representation of counter.
+    int j = 0, i = 0;             // This variable will control 'column' index of **mat.
+    short count = 0;     // This will store counter and value as an int.
+    char buffer = 0; // This will be used to stores value and counter.
+    short value;
 
-    while (stop != 1 && ftell(file) < aux || !feof(file)) {
+    while ((ftell(file) < aux) && (!feof(file))) {
+
+        count = 0;
+        value = 0;
 
         // Read value and its count in file
-        fread(&value, sizeof(char), 1, file);
-        fread(&counter, sizeof(char), 1, file);
+        fread(&value, sizeof(value), 1, file);   // read value
+        fread(&buffer, sizeof(buffer), 1, file); // reads counter
 
-        count = counter;
+        // Converting buffer to its original integer value
+        for (int i = 0; i < 8; i++) {
+            if (buffer & 1)
+                count += pow(2, i);
+            buffer >>= 1;
+        }
 
         // As we stored count as an unsigned char, we need to convert it to integer
-        for (int i = 0; i < count; i++) {
+        for (; j < count; j++) {
 
-            mat[i][j] = value; // saves value
-
-            if (j < width - 1) // checks buffer overflow
-                j++;
-            else { // checks buffer overflow
+            if (j == width) {
                 j = 0;
                 i++;
             }
-            stop = 1; // indicates that the next loop will overflow
+
+            if (i >= height || j >= width) {
+                // printf("\ni: %d e j: %d\n", i, j);
+                break;
+            }
+
+            mat[i][j] = value; // saves value
         }
     }
 
@@ -716,60 +729,58 @@ int descompressor() {
 
     // Starting descompression of run-length data
     Y = runlengthDescomp(Y, file, getHeight(bmpInfo), getWidth(bmpInfo), auxY);
+    Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), auxCb);
+    Cr = runlengthDescomp(Cr, file, getHeight(bmpInfo), getWidth(bmpInfo), EOF);
 
-    // Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), auxCb);
-    // Cr = runlengthDescomp(Cr, file, getHeight(bmpInfo), getWidth(bmpInfo), EOF);
+    // Starting to undo quantization
+    Y = quantizationLuminanceDescomp(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = quantizationCrominanceDescomp(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = quantizationCrominanceDescomp(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // // Starting to undo quantization
-    // Y = quantizationLuminanceDescomp(Y);
-    // Cb = quantizationCrominanceDescomp(Cb);
-    // Cr = quantizationCrominanceDescomp(Cr);
+    // Starting IDCT step
+    Y = idct(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = idct(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = idct(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // // Starting IDCT step
-    // Y = idct(Y, getHeight(bmpInfo), getWidth(bmpInfo));
-    // Cb = idct(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
-    // Cr = idct(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+    // Applying level shift
+    levelShift(Y, 128, getHeight(bmpInfo), getWidth(bmpInfo));
+    levelShift(Cb, 128, getHeight(bmpInfo), getWidth(bmpInfo));
+    levelShift(Cr, 128, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // // Applying level shift
-    // levelShift(Y, 128, getHeight(bmpInfo), getWidth(bmpInfo));
-    // levelShift(Cb, 128, getHeight(bmpInfo), getWidth(bmpInfo));
-    // levelShift(Cr, 128, getHeight(bmpInfo), getWidth(bmpInfo));
+    // Converting from YCbCr to RGB
+    unsigned char **R = NULL, **G = NULL, **B = NULL;
 
-    // // Converting from YCbCr to RGB
-    // unsigned char **R = NULL, **G = NULL, **B = NULL;
+    // Allocating enough memory to store R, G and B channels.
+    R = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
+    G = allocMatrix(G, getHeight(bmpInfo), getWidth(bmpInfo));
+    B = allocMatrix(B, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // // Allocating enough memory to store R, G and B channels.
-    // R = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
-    // G = allocMatrix(G, getHeight(bmpInfo), getWidth(bmpInfo));
-    // B = allocMatrix(B, getHeight(bmpInfo), getWidth(bmpInfo));
+    YcbcrTorgb(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // YcbcrTorgb(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+    // Starting writing in descompressed file
+    FILE *descompressed = fopen("descompressed.bmp", "wb+");
 
-    // // Starting writing in descompressed file
-    // FILE *descompressed = fopen("descompressed.bmp", "wb+");
+    // Writing file and info header at the beginning of descompressed file
+    writeHeaders(bmpFile, bmpInfo, descompressed);
 
-    // // Writing file and info header at the beginning of descompressed file
-    // writeHeaders(bmpFile, bmpInfo, descompressed);
+    // Writing B, G and R component to file.
+    // We take care of values lower 0 and greater 255 with convertion() function;
+    for (int i = 0; i < getHeight(bmpInfo); i++) {
+        for (int j = 0; j < getWidth(bmpInfo); j++) {
+            fputc(B[i][j], descompressed);
+            fputc(G[i][j], descompressed);
+            fputc(R[i][j], descompressed);
+        }
+    }
 
-    // // Writing B, G and R component to file.
-    // // We take care of values lower 0 and greater 255 with convertion() function;
-    // for (int i = 0; i < getHeight(bmpInfo); i++) {
-    //     for (int j = 0; j < getWidth(bmpInfo); j++) {
-    //         fputc(B[i][j], descompressed);
-    //         fputc(G[i][j], descompressed);
-    //         fputc(R[i][j], descompressed);
-    //     }
-    // }
+    free(bmpFile);
+    free(bmpInfo);
 
-    // free(bmpFile);
-    // free(bmpInfo);
+    fclose(file);
 
-    // fclose(file);
-    // fclose(descompressed);
-
-    // freeDoubleMatrix(Y, getHeight(bmpInfo));
-    // freeDoubleMatrix(Cb, getHeight(bmpInfo));
-    // freeDoubleMatrix(Cr, getHeight(bmpInfo));
+    freeDoubleMatrix(Y, getHeight(bmpInfo));
+    freeDoubleMatrix(Cb, getHeight(bmpInfo));
+    freeDoubleMatrix(Cr, getHeight(bmpInfo));
 
     return 1;
 }
