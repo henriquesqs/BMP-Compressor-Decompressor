@@ -351,22 +351,39 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file) {
 
 void runlength(double **dctCoefs, FILE *file, int height, int width) {
 
+    char buffer;     // This will stores the char representation of binary, i.e, count.
+    char binary[9]; // This will stores the binary representation of 'count'.
     short count = 0; // This variable will count occurrences of the same value until a different one is found.
     short value = 0;
-    char buffer;       // This will stores the char representation of binary, i.e, count.
-    char binary[9]; // This will stores the binary representation of 'count'.
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
 
             // emptying vars
-            for (int i = 0; i < 8; i++) 
+            for (int i = 0; i < 8; i++)
                 binary[i] = '0';
 
             // Counting occurrences of current value (while avoiding buffer overflow).
             count = 1;
-            if (i == 0 && j == 0) // run-length must be applied only on DC coefficientes
+            if (i == 0 && j == 0) { // run-length must be applied only on DC coefficientes
+
+                value = dctCoefs[i][j];
+                fwrite(&value, sizeof(value), 1, file);
+
+                /* Converting count to binary */
+                for (int i = 0; i < 8; i++) {
+                    binary[i] = (count & 1) + '0';
+                    count >>= 1;
+                }
+
+                // Transfers binary[] data to 1 byte
+                for (int k = 7; k >= 0; k--)
+                    buffer = (buffer << 1) | (binary[k] == '1');
+
+                fwrite(&buffer, sizeof(buffer), 1, file);
+
                 j++;
+            }
 
             while (j < width && dctCoefs[i][j - 1] == dctCoefs[i][j]) {
                 count++;
@@ -589,10 +606,10 @@ double **idct(double **mat, int height, int width) {
 
 double **runlengthDescomp(double **mat, FILE *file, int height, int width, long int aux) {
 
-    int j = 0, i = 0;             // This variable will control 'column' index of **mat.
-    short count = 0;     // This will store counter and value as an int.
-    char buffer = 0; // This will be used to stores value and counter.
     short value;
+    int j = 0, i = 0; // This variable will control 'column' index of **mat.
+    short count = 0;  // This will store counter and value as an int.
+    char buffer = 0;  // This will be used to stores value and counter.
 
     while ((ftell(file) < aux) && (!feof(file))) {
 
@@ -729,6 +746,8 @@ int descompressor() {
 
     // Starting descompression of run-length data
     Y = runlengthDescomp(Y, file, getHeight(bmpInfo), getWidth(bmpInfo), auxY);
+    printComponent(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+
     Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), auxCb);
     Cr = runlengthDescomp(Cr, file, getHeight(bmpInfo), getWidth(bmpInfo), EOF);
 
