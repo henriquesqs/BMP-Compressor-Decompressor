@@ -235,10 +235,27 @@ int imageSize(BMPINFOHEADER *infoHeader);
 */
 long int fileSize(FILE *file);
 
-void divideComponent(double **component, int height, int width, FILE *compressed);
+/*
+    Function responsible for dividing component into 8x8 pieces 
+    and apply vectorization before run-length.
 
-// pra testar
-void printComponent(double **component, int height, int width);
+    PARAMETERS:
+        - component: matrix to divide;
+        - height: height of matrix;
+        - width: width of matrix;
+        - file: file to store bytes in run-length;
+*/
+void divideComponent(double **component, int height, int width, FILE *file);
+
+/*
+    Function responsible for printing a double **.
+
+    PARAMETERS:
+        - mat: mat to print its content;
+        - height: height of mat;
+        - width: width of mat;
+*/
+void printComponent(double **mat, int height, int width);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.
@@ -287,11 +304,12 @@ double **quantizationCrominance(double **component, int height, int width);
     This will help on run-length codification step as it puts zeros at the ending of vector.
 
     PARAMETERS:
+        - mat: matrix to apply vectorization;
         - vector: vector to store elements;
-        - mat: matrix to apply vectorization.
+        - height: height of matrix;
+        - width: width of matrix.
 */
-// void vectorization(short *vector, double **mat);
-void zigZagMatrix(double **arr, short *vector, int n, int m);
+void vectorization(double **mat, short *vector, int height, int width);
 
 /*
     Function responsible for converting from RGB channels to YCbCr.
@@ -315,7 +333,6 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double 
         - vector: vector with data to compress;
         - file: file to output compressed data.
 */
-// void runlength(double **dctCoefs, FILE *file, int height, int width);
 void runlength(short *vector, FILE *file);
 
 /*
