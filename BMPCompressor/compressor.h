@@ -235,19 +235,7 @@ int imageSize(BMPINFOHEADER *infoHeader);
 */
 long int fileSize(FILE *file);
 
-/*
-    Function responsible for dividing our image into 8x8 matrices and
-    apply dct, quantization, vectorization and run-length into each one of them.
-
-    PARAMETERS:
-        - lum: flag to indicate if its a luminance component or not;
-        - compressed: file to store compressed data;
-        - component: component we want to divide and apply dct, quantization and run-length;
-        - height: height of component;
-        - width: width of component;
-    
-*/
-double **divideMatrices(int lum, FILE *compressed, double **component, int height, int width);
+void divideComponent(double **component, int height, int width, FILE *compressed);
 
 // pra testar
 void printComponent(double **component, int height, int width);
@@ -302,7 +290,8 @@ double **quantizationCrominance(double **component, int height, int width);
         - vector: vector to store elements;
         - mat: matrix to apply vectorization.
 */
-void vectorization(unsigned char *vector, double **mat);
+// void vectorization(short *vector, double **mat);
+void zigZagMatrix(double **arr, short *vector, int n, int m);
 
 /*
     Function responsible for converting from RGB channels to YCbCr.
@@ -326,7 +315,8 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double 
         - vector: vector with data to compress;
         - file: file to output compressed data.
 */
-void runlength(double **dctCoefs, FILE *file, int height, int width);
+// void runlength(double **dctCoefs, FILE *file, int height, int width);
+void runlength(short *vector, FILE *file);
 
 /*
     Function responsible for writing in 'file' the data inside BMPINFOHEADER and BMPINFOHEADER.
