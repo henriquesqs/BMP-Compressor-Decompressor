@@ -16,5 +16,5 @@ As said before, your image must accomplish this requisites listed below:
 - Follow the instructions.
 
 ### Credits
-- Dennis L. Green (@DennisLemkeGreen);
-- Henrique dos Santos (@henriquesqs).
+- Dennis L. Green ([@DennisLemkeGreen](https://github.com/DennisLemkeGreen));
+- Henrique dos Santos ([@henriquesqs](https://github.com/henriquesqs));
