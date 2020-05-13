@@ -236,18 +236,26 @@ int imageSize(BMPINFOHEADER *infoHeader);
 long int fileSize(FILE *file);
 
 /*
-    Function responsible for dividing our image into 8x8 matrices and
-    apply dct, quantization, vectorization and run-length into each one of them.
+    Function responsible for dividing component into 8x8 pieces 
+    and apply vectorization before run-length.
 
     PARAMETERS:
-        - lum: flag to indicate if its a luminance component or not;
-        - compressed: file to store compressed data;
-        - component: component we want to divide and apply dct, quantization and run-length;
-        - height: height of component;
-        - width: width of component;
-    
+        - component: matrix to divide;
+        - height: height of matrix;
+        - width: width of matrix;
+        - file: file to store bytes in run-length;
 */
-double **divideMatrices(int lum, FILE *compressed, double **component, int height, int width);
+void divideComponent(double **component, int height, int width, FILE *file);
+
+/*
+    Function responsible for printing a double **.
+
+    PARAMETERS:
+        - mat: mat to print its content;
+        - height: height of mat;
+        - width: width of mat;
+*/
+void printComponent(double **mat, int height, int width);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.
@@ -257,7 +265,7 @@ double **divideMatrices(int lum, FILE *compressed, double **component, int heigh
         - dctCoefs: matrix where we're going to store dct result;
         - mat: matrix with coeffs we're going to apply dct.
 */
-double **dct(double **dctCoefs, double **mat);
+double **dct(double **compont, int height, int width);
 
 /*
     Function responsible for apply a level shift in a double matrix.
@@ -279,7 +287,7 @@ void levelShift(double **mat, int offBits, int height, int width);
         - coefs: matrix with dct coefficients.
 
 */
-double **quantizationLuminance(double **coefs);
+double **quantizationLuminance(double **component, int height, int width);
 
 /*
     Function responsible for apply quantization in crominance components. 
@@ -289,17 +297,19 @@ double **quantizationLuminance(double **coefs);
         - coefs: matrix with dct coefficients.
 
 */
-double **quantizationCrominance(double **component);
+double **quantizationCrominance(double **component, int height, int width);
 
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
     This will help on run-length codification step as it puts zeros at the ending of vector.
 
     PARAMETERS:
+        - mat: matrix to apply vectorization;
         - vector: vector to store elements;
-        - mat: matrix to apply vectorization.
+        - height: height of matrix;
+        - width: width of matrix.
 */
-void vectorization(unsigned char *vector, double **mat);
+void vectorization(double **mat, short *vector, int height, int width);
 
 /*
     Function responsible for converting from RGB channels to YCbCr.
@@ -323,7 +333,7 @@ void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double 
         - vector: vector with data to compress;
         - file: file to output compressed data.
 */
-void runlength(unsigned char *vector, FILE *file);
+void runlength(short *vector, FILE *file);
 
 /*
     Function responsible for writing in 'file' the data inside BMPINFOHEADER and BMPINFOHEADER.
@@ -343,6 +353,6 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file);
         - auxCb: auxiliar variable to stores where Cb component (from YCbCr) will ends in compressed file;
         - compressRate: pointer to a variable responsible to stores the compression rate.
 */
-int compress(long int *auxY, long int *auxCb, double *compressRate);
+int compress(double *compressRate);
 
 #endif

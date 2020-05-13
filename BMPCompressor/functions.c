@@ -150,6 +150,11 @@ int **allocIntMatrix(int **mat, int n, int m) {
     for (int i = 0; i < n; i++)
         mat[i] = malloc(m * sizeof(int));
 
+    // Initializing mat
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            mat[i][j] = 0;
+
     return mat;
 }
 
@@ -159,6 +164,11 @@ double **allocDoubleMatrix(double **mat, int n, int m) {
 
     for (int i = 0; i < n; i++)
         mat[i] = malloc(m * sizeof(double));
+
+    // Initializing mat
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            mat[i][j] = 0;
 
     return mat;
 }
@@ -229,99 +239,42 @@ void levelShift(double **mat, int offBits, int height, int width) {
             mat[i][j] += offBits;
 }
 
-double **dct(double **dctCoefs, double **mat) {
+double **dct(double **mat, int height, int width) {
 
-    // double c1 = 0, c2 = 0, aux = 0;
     double aux = 0;
+    double **dctCoefs = allocDoubleMatrix(dctCoefs, height, width);
 
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-
-            // c1 = c2 = 1; // default value of consts
-
-            // if (i == 0)
-            //     c1 = (1 / sqrt(2));
-
-            // if (j == 0)
-            //     c2 = (1 / sqrt(2));
-
-            aux = 0; // aux variable to store sum values
+    // First double 'for loop' divides mat into 8x8 pieces and save this slice in mat2
+    for (int a = 0; a < ceil(height / 8); a++) {
+        for (int b = 0; b < ceil(width / 8); b++) {
 
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
 
-                    aux += mat[x][y] * cosine[x][i] * cosine[y][j];
+                    aux = 0; // aux variable to store sum values
+
+                    for (int i = 0; i < 8; i++) {
+                        for (int j = 0; j < 8; j++) {
+                            aux += mat[a * 8 + i][b * 8 + j] * cosine[i][x] * cosine[j][y];
+                        }
+                    }
+                    dctCoefs[a * 8 + x][b * 8 + y] = C[x] * C[y] * 0.25 * aux;
                 }
             }
-
-            dctCoefs[i][j] = C[i] * C[j] * 0.25 * aux;
         }
     }
 
+    // mat = dctCoefs;
+
+    // freeDoubleMatrix(dctCoefs, height);
+
+    // return mat;
     return dctCoefs;
 }
 
-double **divideMatrices(int lum, FILE *compressed, double **component, int height, int width) {
+double **quantizationLuminance(double **component, int height, int width) {
 
-    double **mat = allocDoubleMatrix(mat, 8, 8);                // 'mat' will allocate each 8x8 piece of component
-    double **dctCoefs = allocDoubleMatrix(dctCoefs, 8, 8);      // 'dctCoefs' will temporally allocate values after dct
-    unsigned char *vector = malloc(64 * sizeof(unsigned char)); // 'vector' will be used to store values after vectorization
-
-    // Applying level shift to 'component' in order to increase performance on the next steps
-    levelShift(component, -128, height, width);
-
-    // On this next logical block, we are dividing 'component' into 8x8 matrices
-    // in order to apply dct, quantization and vectorization into each one of them.
-
-    for (int i = 0; i < ceil(height / 8); i++) {
-        for (int j = 0; j < ceil(width / 8); j++) {
-
-            for (int k = 0; k < 8; k++) {
-                for (int l = 0; l < 8; l++) {
-
-                    // We are just copying a 8x8 part of 'component' matrix to apply
-                    // dct in each 8x8 part in order to increase its performance.
-                    mat[k][l] = component[i * 8 + k][j * 8 + l];
-                }
-            }
-
-            // emptying dctCoefs
-            for (int a = 0; a < 8; a++)
-                for (int b = 0; b < 8; b++)
-                    dctCoefs[a][b] = 0;
-
-            // emptying vector
-            for (int a = 0; a < 64; a++)
-                vector[a] = 0;
-
-            dct(dctCoefs, mat);
-
-            // idct(dctCoefs, mat);
-
-            if (lum)
-                quantizationLuminance(dctCoefs);
-            else
-                quantizationCrominance(dctCoefs);
-
-            // On this step, we're going to apply vectorization using zig-zag scan. We do this to
-            // make easier for us to compress the image by moving all the zero values to the end of the vector.
-            // Its told that this step helps to increase run-length encoding performance.
-
-            vectorization(vector, dctCoefs);
-
-            // Applying run-length to compress data on quantified vector. Also, we output the compressed file (compressed.bin)
-            runlength(vector, compressed);
-        }
-    }
-
-    free(vector);
-    freeDoubleMatrix(mat, 8);
-    freeDoubleMatrix(dctCoefs, 8);
-
-    return component;
-}
-
-double **quantizationLuminance(double **component) {
+    double aux = 0;
 
     // LuminanceTable is applied in Y component
     double luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
@@ -333,15 +286,24 @@ double **quantizationLuminance(double **component) {
                                    49, 64, 78, 87, 103, 121, 120, 101,
                                    72, 92, 95, 98, 112, 100, 103, 99};
 
-    for (int i = 0; i < 8; i++)
-        for (int j = 0; j < 8; j++)
-
-            component[i][j] = floor(component[i][j] / luminanceTable[i][j]);
-
+    for (int a = 0; a < ceil(height / 8); a++) {
+        for (int b = 0; b < ceil(width / 8); b++) {
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    aux = round(component[a * 8 + i][b * 8 + j] / luminanceTable[i][j]);
+                    if (aux == -0)
+                        aux = 0;
+                    component[a * 8 + i][b * 8 + j] = aux;
+                }
+            }
+        }
+    }
     return component;
 }
 
-double **quantizationCrominance(double **component) {
+double **quantizationCrominance(double **component, int height, int width) {
+
+    double aux = 0;
 
     // Crominance is applied in Cb and Cr components
     double crominanceTable[8][8] = {17, 18, 24, 47, 99, 99, 99, 99,
@@ -353,69 +315,30 @@ double **quantizationCrominance(double **component) {
                                     99, 99, 99, 99, 99, 99, 99, 99,
                                     99, 99, 99, 99, 99, 99, 99, 99};
 
-    for (int i = 0; i < 8; i++)
-        for (int j = 0; j < 8; j++)
-            component[i][j] = floor(component[i][j] / crominanceTable[i][j]);
-
-    return component;
-}
-
-void vectorization(unsigned char *vector, double **mat) {
-
-    int dir = -1;         // Every time dir is < 0, go down. Otherwise, go right.
-    int steps = 0;        // Variable to avoid buffer overflow.
-    int lin = 0, col = 0; // Variables to control lines and col from double**.
-
-    vector[steps++] = mat[lin][col];
-
-    while (steps < 64) {
-
-        if (lin == 0) { // it means we cant go up anymore
-
-            if (dir < 0) {
-                col++;
-                vector[steps++] = mat[lin][col];
-                dir *= -1;
-            }
-
-            else {
-                while (col > 0) {
-                    lin++;
-                    col--;
-                    vector[steps++] = mat[lin][col];
-                }
-            }
-        }
-
-        else if (col == 0) {
-
-            if (dir > 0) {
-                lin++;
-                if (lin == 8)
-                    break;
-                vector[steps++] = mat[lin][col];
-                dir *= -1;
-            }
-
-            else {
-                while (lin > 0 && col < 8) {
-                    lin--;
-                    col++;
-                    vector[steps++] = mat[lin][col];
+    for (int a = 0; a < ceil(height / 8); a++) {
+        for (int b = 0; b < ceil(width / 8); b++) {
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    aux = round(component[a * 8 + i][b * 8 + j] / crominanceTable[i][j]);
+                    if (aux == -0)
+                        aux = 0;
+                    component[a * 8 + i][b * 8 + j] = aux;
                 }
             }
         }
     }
+
+    return component;
 }
 
 void rgbToYcbcr(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr, int height, int width) {
 
-    float Kr = 0.299, Kb = 0.114;
+    double Kr = 0.299, Kb = 0.114;
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
 
-            Y[i][j] = Kr * R[i][j] + (0.587) * G[i][j] + Kb * B[i][j];
+            Y[i][j] = (Kr * R[i][j]) + (0.587 * G[i][j]) + (Kb * B[i][j]);
             Cb[i][j] = 0.564 * (B[i][j] - Y[i][j]);
             Cr[i][j] = 0.713 * (R[i][j] - Y[i][j]);
         }
@@ -445,38 +368,55 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file) {
     fwrite(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 }
 
-void runlength(unsigned char *vector, FILE *file) {
+void runlength(short *vector, FILE *file) {
 
-    int count = 0;        // This variable will count occurrences of the same value until a different one is found.
-    char binary[9];       // This will stores the binary representation of 'count'.
-    unsigned char buffer; // This will stores the char representation of binary, i.e, count.
+    int i = 0;
+    char buffer = 0; // This will stores the char representation of count.
+    int count = 1;   // This variable will count occurrences of the same value until a different one is found.
+    short value = 0;
 
-    for (int i = 1; i < 64; i++) { // 'i' starts at position 1 because position 0 has a DC coefficient and run-length must be applied in AC coefficientes
+    for (i = 0; i < 64; i++) {
 
-        // Counting occurrences of current value (while avoiding buffer overflow).
-        count = 1;
+        if (i == 0) { // run-length must be applied only on DC coefficientes
 
-        while (i < 63 && vector[i] == vector[i + 1]) {
-            count++;
+            fwrite(&vector[i], sizeof(vector[i]), 1, file); // writes value in file
+
+            buffer = count;                           // converting count to char
+            fwrite(&buffer, sizeof(buffer), 1, file); // writes count in file
+
+            // printf("value: %d\n", vector[i]);
+            // printf("buffer: %d\n", buffer);
+            // printf("count: %d\n\n", count);
+
             i++;
         }
 
-        // When finds a different value, starts preparation to
-        // write the previous value and its count in file.
+        // emptying vars
+        count = 1;
+        value = -32000;
 
-        // Converting count to binary
-        // Thanks to Fifi from StackOverflow for his answer (https://stackoverflow.com/a/58940759/10304974) :)
-        for (int j = 0; j < 8; j++)
-            binary[j] = (count & (int)1 << (8 - j - 1)) ? '1' : '0';
-        binary[8] = '\0';
+        // Counting occurrences of current value.
+        while (i < 64) {
 
-        // Transfers binary[] data to 1 byte (thanks to Professor Rudinei Goularte for this)
-        for (int j = 0; j < 8; j++)
-            buffer = (buffer << 1) | (binary[j] == '1');
+            value = vector[i];
+            if (value == vector[i + 1]) { // if current value equals the next
+
+                i++;     // checks next value
+                count++; // count its number of occurrences
+
+            } else // stop (we found a differente value)
+                break;
+        }
+
+        buffer = count; // converting count to char
 
         // Writes value and its count in file
-        fwrite(&vector[i], sizeof(vector[i]), 1, file);
-        fwrite(&buffer, sizeof(buffer), 1, file);
+        fwrite(&value, sizeof(value), 1, file);   // writes value
+        fwrite(&buffer, sizeof(buffer), 1, file); // writes count
+
+        // printf("value: %d\n", value);
+        // printf("buffer: %d\n", buffer);
+        // printf("count: %d\n\n", count);
     }
 }
 
@@ -503,7 +443,154 @@ void printHeader(BMPFILEHEADER *bmpFile, BMPINFOHEADER *bmpInfo) {
     printf("biClrImportant: %d\n", bmpInfo->biClrImportant);
 }
 
-int compress(long int *auxY, long int *auxCb, double *compressRate) {
+void printComponent(double **component, int height, int width) {
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            printf("%f ", component[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void divideComponent(double **component, int height, int width, FILE *compressed) {
+
+    short *vector = malloc(64 * sizeof(short));
+    double **mat = allocDoubleMatrix(mat, 8, 8);
+
+    // Diving component into 8x8 pieces and saving in mat
+    for (int a = 0; a < ceil(height / 8); a++) {
+        for (int b = 0; b < ceil(width / 8); b++) {
+
+            for (int x = 0; x < 8; x++) {
+                for (int y = 0; y < 8; y++) {
+                    mat[x][y] = component[a * 8 + x][b * 8 + y];
+                }
+            }
+
+            vectorization(mat, vector, 8, 8); // Applying vectorization in 8x8 pieces of component
+            runlength(vector, compressed);    // Applying runlength in 8x8 pieces of component
+        }
+    }
+
+    free(vector);
+    freeDoubleMatrix(mat, 8);
+}
+
+void vectorization(double **arr, short *vector, int n, int m) {
+
+    /*
+        SOURCE:
+        https: //www.geeksforgeeks.org/print-matrix-zag-zag-fashion/
+    */
+
+    int row = 0, col = 0;
+    int steps = 0;
+
+    // Boolean variable that will true if we
+    // need to increment 'row' value otherwise
+    // false- if increment 'col' value
+    bool row_inc = 0;
+
+    int mn = -1;
+
+    // Print matrix of lower half zig-zag pattern
+    if (m < n)
+        mn = m;
+    else
+        mn = n;
+
+    for (int len = 1; len <= mn; ++len) {
+        for (int i = 0; i < len; ++i) {
+            vector[steps++] = arr[row][col];
+
+            if (i + 1 == len)
+                break;
+            // If row_increment value is true
+            // increment row and decrement col
+            // else decrement row and increment
+            // col
+            if (row_inc)
+                ++row, --col;
+            else
+                --row, ++col;
+        }
+
+        if (len == mn)
+            break;
+
+        // Update row or col value according
+        // to the last increment
+        if (row_inc)
+            ++row, row_inc = false;
+        else
+            ++col, row_inc = true;
+    }
+
+    // Update the indexes of row and col variable
+    if (row == 0) {
+        if (col == m - 1)
+            ++row;
+        else
+            ++col;
+        row_inc = 1;
+    } else {
+        if (row == n - 1)
+            ++col;
+        else
+            ++row;
+        row_inc = 0;
+    }
+
+    // Print the next half zig-zag pattern
+    int MAX2 = -1;
+    if (m > n)
+        MAX2 = m - 1;
+    else
+        MAX2 = n - 1;
+
+    for (int len, diag = MAX2; diag > 0; --diag) {
+
+        if (diag > mn)
+            len = mn;
+        else
+            len = diag;
+
+        for (int i = 0; i < len; ++i) {
+            vector[steps++] = arr[row][col];
+
+            if (i + 1 == len)
+                break;
+
+            // Update row or col value according
+            // to the last increment
+            if (row_inc)
+                ++row, --col;
+            else
+                ++col, --row;
+        }
+
+        // Update the indexes of row and col variable
+        if (row == 0 || col == m - 1) {
+            if (col == m - 1)
+                ++row;
+            else
+                ++col;
+
+            row_inc = true;
+        }
+
+        else if (col == 0 || row == n - 1) {
+            if (row == n - 1)
+                ++col;
+            else
+                ++row;
+
+            row_inc = false;
+        }
+    }
+}
+
+int compress(double *compressRate) {
 
     char fileName[51];
 
@@ -515,7 +602,6 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     printf("\nYour image file name: ");
     scanf("%50s", fileName);
 
-    // file = fopen("images/8x8.bmp", "rb"); // Openning image that we want to compress.
     FILE *file = fopen(fileName, "rb"); // Openning image that we want to compress.
 
     if (file == NULL) { // Checking if there was an error opening the image.
@@ -529,8 +615,6 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
         return ERROR;
 
-    // printHeader(bmpFile, bmpInfo); Prints headers content
-
     printf("Starting compression, please wait...\n");
 
     // Moving our file pointer to the bitmap data region.
@@ -543,7 +627,7 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     R = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
     G = allocMatrix(G, getHeight(bmpInfo), getWidth(bmpInfo));
     B = allocMatrix(B, getHeight(bmpInfo), getWidth(bmpInfo));
-    
+
     // Separates the bitmap data into its RGB components.
     separateComponents(file, bmpInfo, R, G, B);
 
@@ -556,28 +640,39 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
 
     rgbToYcbcr(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // Dividing each component into 8x8 matrices in order to use DCT (Discrete Cosine Transform) algorithm,
-    // apply quantization and vectorization steps at each 8x8 matrix, due to some researchs proving that this
-    // division increases the efficiency of these steps.
+    // Applying level shift to Y, Cb and Cr components in order to increase performance on the next steps
+    levelShift(Y, -128, getHeight(bmpInfo), getWidth(bmpInfo));
+    levelShift(Cb, -128, getHeight(bmpInfo), getWidth(bmpInfo));
+    levelShift(Cr, -128, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    FILE *compressed = fopen("compressed.bin", "wb+"); // File to save compressed image
+    // Opening file to save compressed image.
+    FILE *compressed = fopen("compressed.bin", "wb+");
 
-    // Writing header from image before its compression.
+    // Writing header from original image before its compression.
     writeHeaders(bmpFile, bmpInfo, compressed);
 
-    divideMatrices(1, compressed, Y, getHeight(bmpInfo), getWidth(bmpInfo));
-    *auxY = ftell(compressed);
+    // Making sure that we are writing data at the correct place (after the 54 first bytes).
+    moveToBitmapData(compressed, bmpFile);
 
-    divideMatrices(0, compressed, Cb, getHeight(bmpInfo), getWidth(bmpInfo));
-    *auxCb = ftell(compressed);
+    // Applying dct on components
+    Y = dct(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = dct(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = dct(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    divideMatrices(0, compressed, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+    // Applying quantization on components
+    Y = quantizationLuminance(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = quantizationCrominance(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = quantizationCrominance(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    // Dividing components into 8x8 pieces and applying vectorization and run-length
+    divideComponent(Y, getHeight(bmpInfo), getWidth(bmpInfo), compressed);
+    divideComponent(Cb, getHeight(bmpInfo), getWidth(bmpInfo), compressed);
+    divideComponent(Cr, getHeight(bmpInfo), getWidth(bmpInfo), compressed);
 
     // Calculating compressRate
     *compressRate = (100 - (100 * ((double)fileSize(compressed) / (double)fileSize(file))));
 
     // Free allocated memory.
-
     fclose(file);       // closes original image file
     fclose(compressed); // closes compressed image file
 
@@ -587,6 +682,7 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
     freeMatrix(R, getHeight(bmpInfo));
     freeMatrix(G, getHeight(bmpInfo));
     freeMatrix(B, getHeight(bmpInfo));
+
     freeDoubleMatrix(Y, getHeight(bmpInfo));
     freeDoubleMatrix(Cb, getHeight(bmpInfo));
     freeDoubleMatrix(Cr, getHeight(bmpInfo));
@@ -596,26 +692,130 @@ int compress(long int *auxY, long int *auxCb, double *compressRate) {
 
 // Below, functions used to create our descompressor
 
-void YcbcrTorgb(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr, int height, int width) {
+void zigZagMatrixDescomp(double **arr, short *vector, int n, int m) {
 
-    float Kr = 0.299, Kb = 0.114;
+    int row = 0, col = 0;
+    int steps = 0;
+
+    // Boolean variable that will true if we
+    // need to increment 'row' value otherwise
+    // false- if increment 'col' value
+    bool row_inc = 0;
+
+    int mn = -1;
+
+    // Print matrix of lower half zig-zag pattern
+    if (m < n)
+        mn = m;
+    else
+        mn = n;
+
+    for (int len = 1; len <= mn; ++len) {
+        for (int i = 0; i < len; ++i) {
+            arr[row][col] = vector[steps++];
+
+            if (i + 1 == len)
+                break;
+            // If row_increment value is true
+            // increment row and decrement col
+            // else decrement row and increment
+            // col
+            if (row_inc)
+                ++row, --col;
+            else
+                --row, ++col;
+        }
+
+        if (len == mn)
+            break;
+
+        // Update row or col value according
+        // to the last increment
+        if (row_inc)
+            ++row, row_inc = false;
+        else
+            ++col, row_inc = true;
+    }
+
+    // Update the indexes of row and col variable
+    if (row == 0) {
+        if (col == m - 1)
+            ++row;
+        else
+            ++col;
+        row_inc = 1;
+    } else {
+        if (row == n - 1)
+            ++col;
+        else
+            ++row;
+        row_inc = 0;
+    }
+
+    // Print the next half zig-zag pattern
+    int MAX2 = -1;
+    if (m > n)
+        MAX2 = m - 1;
+    else
+        MAX2 = n - 1;
+
+    for (int len, diag = MAX2; diag > 0; --diag) {
+
+        if (diag > mn)
+            len = mn;
+        else
+            len = diag;
+
+        for (int i = 0; i < len; ++i) {
+            arr[row][col] = vector[steps++];
+
+            if (i + 1 == len)
+                break;
+
+            // Update row or col value according
+            // to the last increment
+            if (row_inc)
+                ++row, --col;
+            else
+                ++col, --row;
+        }
+
+        // Update the indexes of row and col variable
+        if (row == 0 || col == m - 1) {
+            if (col == m - 1)
+                ++row;
+            else
+                ++col;
+
+            row_inc = true;
+        }
+
+        else if (col == 0 || row == n - 1) {
+            if (row == n - 1)
+                ++col;
+            else
+                ++row;
+
+            row_inc = false;
+        }
+    }
+}
+
+void YcbcrTorgb(unsigned char **R, unsigned char **G, unsigned char **B, double **Y, double **Cb, double **Cr, int height, int width) {
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
 
-            R[i][j] = Y[i][j] + 1.402 * (Cr[i][j] - 128);
-            G[i][j] = Y[i][j] - 0.344136 * (Cb[i][j] - 128) - 0.714136 * (Cr[i][j] - 128);
-            B[i][j] = Y[i][j] + 1.772 * (Cb[i][j] - 128);
+            R[i][j] = convertion(Y[i][j] + (1.402 * Cr[i][j]));
+            G[i][j] = convertion(Y[i][j] - (0.344 * Cb[i][j]) - (0.714 * Cr[i][j]));
+            B[i][j] = convertion(Y[i][j] + (1.772 * Cb[i][j]));
         }
     }
 }
 
 double **idct(double **mat, int height, int width) {
 
-    double mat2[height][width];
     double aux = 0;
-    // double c1 = 0, c2 = 0, aux = 0;
-
     double **dctCoefs = allocDoubleMatrix(dctCoefs, height, width);
 
     // First double 'for loop' divides mat into 8x8 pieces and save this slice in mat2
@@ -625,26 +825,16 @@ double **idct(double **mat, int height, int width) {
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
 
-                    mat2[x][y] = mat[a * 8 + x][b * 8 + y];
-
-                    // c1 = c2 = 1; // default value of consts
-
                     aux = 0; // aux variable to store sum values
 
                     for (int i = 0; i < 8; i++) {
                         for (int j = 0; j < 8; j++) {
 
-                            // if (i == 0)
-                            //     c1 = (1 / sqrt(2));
-
-                            // if (j == 0)
-                            //     c2 = (1 / sqrt(2));
-
-                            aux += C[i] * C[j] * mat2[i][j] * cosine[x][i] * cosine[y][j];
+                            aux += C[i] * C[j] * mat[a * 8 + i][b * 8 + j] * cosine[x][i] * cosine[y][j];
                         }
                     }
 
-                    dctCoefs[x][y] = 0.25 * aux;
+                    dctCoefs[a * 8 + x][b * 8 + y] = 0.25 * aux;
                 }
             }
         }
@@ -653,38 +843,30 @@ double **idct(double **mat, int height, int width) {
     return dctCoefs;
 }
 
-double **runlengthDescomp(double **mat, FILE *file, int height, int width, long int aux) {
+void runlengthDescomp(short *vector, FILE *file) {
 
-    int stop = 0;         // This variable will be used to avoid buffer overflow.
-    int j = 0;            // This variable will control 'column' index of **mat.
-    unsigned char buffer; // This will store the char representation of counter.
-    unsigned char vector; // This will be used to stores the value.
-    int count = 0;
+    int i = 0, count = 1;
+    short value = 0;
+    char buffer = 0;
 
-    while (stop != 1 && ftell(file) < aux || !feof(file)) {
+    while (i < 64) {
 
-        // Read value and its count in file
-        fread(&vector, sizeof(vector), 1, file);
-        fread(&buffer, sizeof(buffer), 1, file);
+        value = -32000;
+        count = -1;
 
-        count = buffer;
+        fread(&value, sizeof(short), 1, file);   // reads value
+        fread(&buffer, sizeof(buffer), 1, file); // reads count
+        count = buffer;                          // converts from char to int
 
-        // As we stored count as an unsigned char, we need to convert it to integer
-        for (int i = 0; i < count; i++) {
+        // printf("value: %d\n", value);
+        // printf("buffer: %d\n", buffer);
+        // printf("count: %d\n\n", count);
 
-            mat[i][j] = vector; // saves value
-
-            if (j < height - 1) // checks buffer overflow
-                j++;
-            else /*if (i == height - 1)*/{ // checks buffer overflow
-                j = 0;
-                i++; 
-            } 
-            stop = 1; // indicates that the next loop will overflow
+        for (int j = 0; j < count; j++) {
+            vector[i] = value;
+            i++;
         }
     }
-
-    return mat;
 }
 
 unsigned char convertion(int num) {
@@ -696,9 +878,80 @@ unsigned char convertion(int num) {
         return (unsigned char)num;
 }
 
-int descompressor(long int *auxY, long int *auxCb) {
+double **quantizationLuminanceDescomp(double **component, int height, int width) {
 
-    FILE *file = NULL;
+    // LuminanceTable is applied in Y component
+    double luminanceTable[8][8] = {16, 11, 10, 16, 24, 40, 51, 61,
+                                   12, 12, 14, 19, 26, 58, 60, 55,
+                                   14, 13, 16, 24, 40, 57, 69, 56,
+                                   14, 17, 22, 29, 51, 87, 80, 62,
+                                   18, 22, 37, 56, 68, 109, 103, 77,
+                                   24, 35, 55, 64, 81, 104, 113, 92,
+                                   49, 64, 78, 87, 103, 121, 120, 101,
+                                   72, 92, 95, 98, 112, 100, 103, 99};
+
+    for (int a = 0; a < ceil(height / 8); a++) {
+        for (int b = 0; b < ceil(width / 8); b++) {
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    component[a * 8 + i][b * 8 + j] = component[a * 8 + i][b * 8 + j] * luminanceTable[i][j];
+        }
+    }
+    return component;
+}
+
+double **quantizationCrominanceDescomp(double **component, int height, int width) {
+
+    // Crominance is applied in Cb and Cr components
+    double crominanceTable[8][8] = {17, 18, 24, 47, 99, 99, 99, 99,
+                                    18, 21, 26, 66, 99, 99, 99, 99,
+                                    24, 26, 56, 99, 99, 99, 99, 99,
+                                    47, 66, 99, 99, 99, 99, 99, 99,
+                                    99, 99, 99, 99, 99, 99, 99, 99,
+                                    99, 99, 99, 99, 99, 99, 99, 99,
+                                    99, 99, 99, 99, 99, 99, 99, 99,
+                                    99, 99, 99, 99, 99, 99, 99, 99};
+
+    for (int a = 0; a < ceil(height / 8); a++) {
+        for (int b = 0; b < ceil(width / 8); b++) {
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    component[a * 8 + i][b * 8 + j] = floor(component[a * 8 + i][b * 8 + j] / crominanceTable[i][j]);
+        }
+    }
+
+    return component;
+}
+
+double **undoDivideComponent(double **component, int height, int width, FILE *compressed) {
+
+    short *vector = malloc(64 * sizeof(short));
+    double **mat = allocDoubleMatrix(mat, 8, 8);
+
+    for (int a = 0; a < ceil(height / 8); a++) {
+        for (int b = 0; b < ceil(width / 8); b++) {
+
+            runlengthDescomp(vector, compressed);
+
+            for (int x = 0; x < 8; x++) {
+                for (int y = 0; y < 8; y++) {
+
+                    // vectorizationDescomp(mat, vector);
+                    zigZagMatrixDescomp(mat, vector, 8, 8);
+                    component[a * 8 + x][b * 8 + y] = mat[x][y];
+                }
+            }
+        }
+    }
+
+    free(vector);
+    freeDoubleMatrix(mat, 8);
+
+    return component;
+}
+
+int descompressor() {
+
     char fileName[51];
 
     BMPFILEHEADER *bmpFile = (BMPFILEHEADER *)malloc(14);
@@ -709,7 +962,7 @@ int descompressor(long int *auxY, long int *auxCb) {
     printf("\nYour image file name: ");
     scanf("%50s", fileName);
 
-    file = fopen(fileName, "rb"); // Openning image that we want to descompress.
+    FILE *file = fopen(fileName, "rb"); // Openning image that we want to descompress.
 
     if (file == NULL) { // Checking if there was an error opening the image.
         printf("\nError reading file. Did you enter its correct name?");
@@ -727,26 +980,38 @@ int descompressor(long int *auxY, long int *auxCb) {
     // Moving our file pointer to the bitmap data region.
     moveToBitmapData(file, bmpFile);
 
-    // Starting descompression of run-length data
+    // Creating and allocating data in variables below to store Y, Cb and Cr components.
     double **Y = NULL, **Cb = NULL, **Cr = NULL;
 
     Y = allocDoubleMatrix(Y, getHeight(bmpInfo), getWidth(bmpInfo));
     Cb = allocDoubleMatrix(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
     Cr = allocDoubleMatrix(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    Y = runlengthDescomp(Y, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxY);
-    Cb = runlengthDescomp(Cb, file, getHeight(bmpInfo), getWidth(bmpInfo), *auxY);
-    Cr = runlengthDescomp(Cr, file, getHeight(bmpInfo), getWidth(bmpInfo), EOF);
+    // Starting descompression of run-length and vectorization data
+    Y = undoDivideComponent(Y, getHeight(bmpInfo), getWidth(bmpInfo), file);
+    Cb = undoDivideComponent(Cb, getHeight(bmpInfo), getWidth(bmpInfo), file);
+    Cr = undoDivideComponent(Cr, getHeight(bmpInfo), getWidth(bmpInfo), file);
+
+    // Starting to undo quantization
+    Y = quantizationLuminanceDescomp(Y, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cb = quantizationCrominanceDescomp(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
+    Cr = quantizationCrominanceDescomp(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Starting IDCT step
     Y = idct(Y, getHeight(bmpInfo), getWidth(bmpInfo));
     Cb = idct(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
     Cr = idct(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
+    // Applying level shift
+    levelShift(Y, 128, getHeight(bmpInfo), getWidth(bmpInfo));
+    levelShift(Cb, 128, getHeight(bmpInfo), getWidth(bmpInfo));
+    levelShift(Cr, 128, getHeight(bmpInfo), getWidth(bmpInfo));
+
     // Converting from YCbCr to RGB
     unsigned char **R = NULL, **G = NULL, **B = NULL;
 
     // Allocating enough memory to store R, G and B channels.
+    // We take care of values lower than 0 and greater than 255 with convertion() function;
     R = allocMatrix(R, getHeight(bmpInfo), getWidth(bmpInfo));
     G = allocMatrix(G, getHeight(bmpInfo), getWidth(bmpInfo));
     B = allocMatrix(B, getHeight(bmpInfo), getWidth(bmpInfo));
@@ -759,25 +1024,27 @@ int descompressor(long int *auxY, long int *auxCb) {
     // Writing file and info header at the beginning of descompressed file
     writeHeaders(bmpFile, bmpInfo, descompressed);
 
-    // Writing B, G and R component to file. 
-    // We take care of values lower 0 and greater 255 with convertion() function;
+    // Writing B, G and R component to file.
     for (int i = 0; i < getHeight(bmpInfo); i++) {
         for (int j = 0; j < getWidth(bmpInfo); j++) {
-            fputc(convertion(B[i][j]), descompressed);
-            fputc(convertion(G[i][j]), descompressed);
-            fputc(convertion(R[i][j]), descompressed);
+            fputc(B[i][j], descompressed);
+            fputc(G[i][j], descompressed);
+            fputc(R[i][j], descompressed);
         }
     }
 
     free(bmpFile);
     free(bmpInfo);
-    
+
     fclose(file);
     fclose(descompressed);
-    
+
+    freeMatrix(R, getHeight(bmpInfo));
+    freeMatrix(G, getHeight(bmpInfo));
+    freeMatrix(B, getHeight(bmpInfo));
     freeDoubleMatrix(Y, getHeight(bmpInfo));
     freeDoubleMatrix(Cb, getHeight(bmpInfo));
     freeDoubleMatrix(Cr, getHeight(bmpInfo));
 
-    return 1;
+    return SUCCESS;
 }
