@@ -13,7 +13,7 @@ As said before, your image must accomplish this requisites listed below:
 - Place the image you want to compress/ descompress in **root folder** OR **images folder**;
 - Compile the source code by entering `make all` in your terminal;
 - Run the program by entering `make run`;
-- Follow the instructions.
+- Follow the instructions the program will show you.
 
 ### Credits
 - Dennis L. Green ([@DennisLemkeGreen](https://github.com/DennisLemkeGreen));
