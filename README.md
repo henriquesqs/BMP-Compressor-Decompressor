@@ -1,5 +1,5 @@
 # BMP IMAGE COMPRESSION AND DESCOMPRESSION
-This project allows you to compress and descompress a BMP image file (with some requisites of size). This compressor and descompressor uses the **JPEG format** to apply compression and descompression.
+This project allows you to compress and descompress a BMP image file (with some requisites of size). This compressor and descompressor uses the **JPEG format** to apply compression and descompression and **uses C11 languague**.
 
 ### Image requisites
 As said before, your image must accomplish this requisites listed below:
