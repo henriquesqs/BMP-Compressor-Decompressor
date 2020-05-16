@@ -35,6 +35,7 @@ void initCosLUT() {
             cosine[i][x] = 0;
             cosine[i][x] = cos(((((2.0 * i) + 1.0) * (x * PI)) / (16)));
         }
+        // We also initialize C to store the values of constants used in DCT
         if (i)
             C[i] = 1;
         else
@@ -44,13 +45,13 @@ void initCosLUT() {
 
 bool validateImage(int height, int width) {
 
-    //if(height > 1280 || height < 8 || width > 800 || width < 8)
+    //if(height > 1280 || height < 8 || width > 800 || width < 8 || height%8 !=0 || width%8 != 0)
     //    return false; // image is not valid
     //if (type != 0x4D42)
     //    return 0; // its not a bmp file
     //return true;
 
-    return (height > 1280 || height < 8 || width > 800 || width < 8) ? ERROR : SUCCESS;
+    return (height > 1280 || height < 8 || width > 800 || width < 8 || ((height % 8) != 0) || ((width % 8) != 0)) ? ERROR : SUCCESS;
 }
 
 int getWidth(BMPINFOHEADER *infoHeader) {
