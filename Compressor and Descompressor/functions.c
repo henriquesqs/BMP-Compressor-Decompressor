@@ -26,7 +26,7 @@ struct BMPINFOHEADER {
 // global variable to store cosine and constant values to later be used in DCT and IDCT
 double cosine[8][8], C[8];
 
-// Below, all the functions used to create our BMP compressor
+// Below, all the functions used to create our BMP COMPRESSOR
 
 void initCosLUT() {
     for (int i = 0; i < 8; i++) {
@@ -47,8 +47,7 @@ bool validateImage(int height, int width) {
 
     //if(height > 1280 || height < 8 || width > 800 || width < 8 || height%8 !=0 || width%8 != 0)
     //    return false; // image is not valid
-    //if (type != 0x4D42)
-    //    return 0; // its not a bmp file
+    
     //return true;
 
     return (height > 1280 || height < 8 || width > 800 || width < 8 || ((height % 8) != 0) || ((width % 8) != 0)) ? ERROR : SUCCESS;
@@ -691,7 +690,7 @@ int compress(double *compressRate) {
     return SUCCESS;
 }
 
-// Below, functions used to create our descompressor
+// Below, functions used to create our BMP DESCOMPRESSOR
 
 void zigZagMatrixDescomp(double **arr, short *vector, int n, int m) {
 
