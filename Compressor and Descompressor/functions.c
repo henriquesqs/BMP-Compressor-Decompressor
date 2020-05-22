@@ -43,14 +43,8 @@ void initCosLUT() {
     }
 }
 
-bool validateImage(int height, int width) {
-
-    //if(height > 1280 || height < 8 || width > 800 || width < 8 || height%8 !=0 || width%8 != 0)
-    //    return false; // image is not valid
-    
-    //return true;
-
-    return (height > 1280 || height < 8 || width > 800 || width < 8 || ((height % 8) != 0) || ((width % 8) != 0)) ? ERROR : SUCCESS;
+int validateImage(int height, int width) {
+    return (width > 1280 || height < 8 || height > 800 || width < 8 || ((height % 8) != 0) || ((width % 8) != 0) ? ERROR : SUCCESS);
 }
 
 int getWidth(BMPINFOHEADER *infoHeader) {
@@ -111,7 +105,12 @@ int readBMPInfoHeader(FILE *file, BMPINFOHEADER *IH) {
     fread(&IH->biClrUsed, sizeof(unsigned int), 1, file);
     fread(&IH->biClrImportant, sizeof(unsigned int), 1, file);
 
-    if (!validateImage(IH->biHeight, IH->biWidth)) {
+    if (IH->biBitCount != 24) {
+        printf("\nImage isnt valid. Your image must have 24 bits for colors.\n");
+        return ERROR;
+    }
+
+    if ( (validateImage(IH->biHeight, IH->biWidth) < 0) ) {
         printf("\nImage isnt valid. Height or Width is incorrect.\nTo use our program, your image must have:\n");
         printf("- Height and width multiple of 8;\n- At least 8x8 pixels;\n- Max size of 1280 x 800 pixels.\n");
         return ERROR;
@@ -612,7 +611,7 @@ int compress(double *compressRate) {
     printf("\nReading image metadata...\n");
 
     // Reading the bmp file header and info header so we can read image data without troubles.
-    if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
+    if (readBMPFileHeader(file, bmpFile) < 0 || readBMPInfoHeader(file, bmpInfo) < 0)
         return ERROR;
 
     printf("Starting compression, please wait...\n");
@@ -972,7 +971,7 @@ int descompressor() {
     printf("\nReading image metadata...\n");
 
     // Reading the bmp file header and info header so we can read image data without troubles.
-    if (!readBMPFileHeader(file, bmpFile) || !readBMPInfoHeader(file, bmpInfo))
+    if (readBMPFileHeader(file, bmpFile) < 0 || readBMPInfoHeader(file, bmpInfo) < 0)
         return ERROR;
 
     printf("Starting descompression, please wait...\n");

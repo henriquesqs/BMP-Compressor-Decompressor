@@ -55,7 +55,7 @@ int getHeight(BMPINFOHEADER *infoHeader);
 
     RETURN: SUCCESS if image is valid and ERROR otherwise.
 */
-bool validateImage(int height, int width);
+int validateImage(int height, int width);
 
 /* 
     Function to read the file header and store in the struct.
