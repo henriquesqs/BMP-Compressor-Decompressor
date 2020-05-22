@@ -17,7 +17,7 @@ void runlengthDescomp(short *vector, FILE *file);
 
 double **quantizationLuminanceDescomp(double **component, int height, int width);
 
-double **quantizationLuminanceDescomp(double **component, int height, int width);
+double **quantizationCrominanceDescomp(double **component, int height, int width);
 
 unsigned char convertion(int num);
 
