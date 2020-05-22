@@ -916,7 +916,7 @@ double **quantizationCrominanceDescomp(double **component, int height, int width
         for (int b = 0; b < ceil(width / 8); b++) {
             for (int i = 0; i < 8; i++)
                 for (int j = 0; j < 8; j++)
-                    component[a * 8 + i][b * 8 + j] = floor(component[a * 8 + i][b * 8 + j] / crominanceTable[i][j]);
+                    component[a * 8 + i][b * 8 + j] = floor(component[a * 8 + i][b * 8 + j] * crominanceTable[i][j]);
         }
     }
 
