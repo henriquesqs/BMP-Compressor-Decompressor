@@ -121,7 +121,6 @@ int readBMPInfoHeader(FILE *file, BMPINFOHEADER *IH) {
 
 void moveToBitmapData(FILE *file, BMPFILEHEADER *FH) {
     fseek(file, FH->bfOffBits, SEEK_SET);
-    // fseek(file, 54, SEEK_SET);
 }
 
 unsigned char **allocMatrix(unsigned char **mat, int n, int m) {
