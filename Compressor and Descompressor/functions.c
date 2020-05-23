@@ -120,8 +120,8 @@ int readBMPInfoHeader(FILE *file, BMPINFOHEADER *IH) {
 }
 
 void moveToBitmapData(FILE *file, BMPFILEHEADER *FH) {
-    // fseek(file, FH->bfOffBits, SEEK_SET);
-    fseek(file, 54, SEEK_SET);
+    fseek(file, FH->bfOffBits, SEEK_SET);
+    // fseek(file, 54, SEEK_SET);
 }
 
 unsigned char **allocMatrix(unsigned char **mat, int n, int m) {
@@ -650,7 +650,7 @@ int compress(double *compressRate) {
     // Writing header from original image before its compression.
     writeHeaders(bmpFile, bmpInfo, compressed);
 
-    // Making sure that we are writing data at the correct place (after the 54 first bytes).
+    // Making sure that we are writing data at the correct place (after the bfOffBits first bytes).
     moveToBitmapData(compressed, bmpFile);
 
     // Applying dct on components
@@ -1022,6 +1022,8 @@ int descompressor() {
 
     // Writing file and info header at the beginning of descompressed file
     writeHeaders(bmpFile, bmpInfo, descompressed);
+
+    moveToBitmapData(descompressed, bmpFile);
 
     // Writing B, G and R component to file.
     for (int i = 0; i < getHeight(bmpInfo); i++) {
