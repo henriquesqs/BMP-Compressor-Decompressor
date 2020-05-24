@@ -166,26 +166,6 @@ void freeDoubleMatrix(double **mat, int rows);
 void separateComponents(FILE *file, BMPINFOHEADER *infoHeader, unsigned char **R, unsigned char **G, unsigned char **B);
 
 /*
-    Function to calculate and return image data size.
-
-    PARAMETERS:
-        - infoHeader: struct with image header informations;
-    
-    RETURNS the size of the data of the image.
-*/
-unsigned int imageDataSize(BMPINFOHEADER *infoHeader);
-
-/*
-    Function to calculate and return image size.
-
-    PARAMETERS:
-        - infoHeader: struct with image header informations;
-    
-    RETURNS the size (width x height) of the image.
-*/
-int imageSize(BMPINFOHEADER *infoHeader);
-
-/*
     Calculates size of a file;
 
     PARAMETERS:
@@ -198,11 +178,11 @@ long int fileSize(FILE *file);
 
 /*
     Function responsible for dividing component into 8x8 pieces 
-    and apply vectorization before run-length.
+    and apply vectorization and run-length in sequence.
 
     PARAMETERS:
         - component: matrix to divide;
-        - height: height of matrix;
+        - height: height of component matrix;
         - width: width of matrix;
         - file: file to store bytes in run-length;
 */
@@ -213,10 +193,13 @@ void divideComponent(double **component, int height, int width, FILE *file);
     These regions are ready to be compressed without any lose of image quality.
 
     PARAMETERS:
-        - dctCoefs: matrix where we're going to store dct result;
-        - mat: matrix with coeffs we're going to apply dct.
+        - component: matrix with components elements to apply dct;
+        - height: height of component matrix;
+        - width: width of component matrix.
+    
+    RETURNS component with its elements after applying dct.
 */
-double **dct(double **compont, int height, int width);
+double **dct(double **component, int height, int width);
 
 /*
     Function responsible for apply a level shift in a double matrix.
@@ -235,7 +218,11 @@ void levelShift(double **mat, int offBits, int height, int width);
     It divides our coefficients matrix (dctCoefs) by a luminance table.
 
     PARAMETERS:
-        - coefs: matrix with dct coefficients.
+        - component: matrix with dct coefficients;
+        - height: height of component matrix;
+        - width: width of component matrix.
+
+    RETURNS component after quantization step;
 
 */
 double **quantizationLuminance(double **component, int height, int width);
@@ -245,7 +232,11 @@ double **quantizationLuminance(double **component, int height, int width);
     It divides our coefficients matrix (dctCoefs) by a crominance table.
 
     PARAMETERS:
-        - coefs: matrix with dct coefficients.
+        - component: matrix with dct coefficients;
+        - height: height of component matrix;
+        - width: width of component matrix.
+
+    RETURNS component after quantization step;
 
 */
 double **quantizationCrominance(double **component, int height, int width);
@@ -253,6 +244,8 @@ double **quantizationCrominance(double **component, int height, int width);
 /*
     This function is responsible for apply vectorization on a matrix using zig-zag scan.
     This will help on run-length codification step as it puts zeros at the ending of vector.
+
+    Source of this function: https://www.geeksforgeeks.org/print-matrix-zag-zag-fashion/
 
     PARAMETERS:
         - mat: matrix to apply vectorization;
@@ -300,9 +293,9 @@ void writeHeaders(BMPFILEHEADER *FH, BMPINFOHEADER *IH, FILE *file);
     Function responsible for calling all the methods to do bmp image compress.
 
     PAREMETERS:
-        - auxY: auxiliar variable to stores where Y component (from YCbCr) will ends in compressed file;
-        - auxCb: auxiliar variable to stores where Cb component (from YCbCr) will ends in compressed file;
         - compressRate: pointer to a variable responsible to stores the compression rate.
+
+    RETURNS SUCCESS if everything went right and ERROR otherwise.
 */
 int compress(double *compressRate);
 
