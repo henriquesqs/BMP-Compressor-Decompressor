@@ -1,3 +1,14 @@
+/*
+    File with all the functions we used to build compressor and descompressor.
+
+    @authors:
+        @henriquesqs
+        @DennisLemkeGreen
+    
+    University of Sao Paulo (USP) - 2020
+    Multimedia subject with Professor Rudinei Goularte.
+*/
+
 #include "compressor.h"
 #include "descompressor.h"
 

@@ -1,10 +1,19 @@
+/*
+    Drive program to run compressor and descompressor of BMP images.
+
+    @authors:
+        @henriquesqs
+        @DennisLemkeGreen
+    
+    University of Sao Paulo (USP) - 2020
+    Multimedia subject with Professor Rudinei Goularte.
+*/
+
 #include "compressor.h"
 #include "descompressor.h"
 #include <time.h>
 
-/*
-    Function responsible for showing options menu.
-*/
+// Function responsible for showing options menu.
 void menu() {
 
     printf("\nEnter your desired option:\n\n");

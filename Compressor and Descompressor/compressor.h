@@ -1,3 +1,14 @@
+/*
+    Header of methods used to build compressor.
+
+    @authors:
+        @henriquesqs
+        @DennisLemkeGreen
+    
+    University of Sao Paulo (USP) - 2020
+    Multimedia subject with Professor Rudinei Goularte.
+*/
+
 #ifndef COMPRESSOR_H
 #define COMPRESSOR_H
 

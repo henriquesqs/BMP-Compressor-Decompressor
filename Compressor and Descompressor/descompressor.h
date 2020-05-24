@@ -1,3 +1,14 @@
+/*
+    Header of methods used to build descompressor.
+
+    @authors:
+        @henriquesqs
+        @DennisLemkeGreen
+    
+    University of Sao Paulo (USP) - 2020
+    Multimedia subject with Professor Rudinei Goularte.
+*/
+
 #ifndef DESCOMPRESSOR_H
 #define DESCOMPRESSOR_H
 
