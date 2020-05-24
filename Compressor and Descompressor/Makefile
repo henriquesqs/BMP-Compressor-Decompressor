@@ -16,7 +16,4 @@ clean:
 	rm *.bmp
 
 valgrind: 
-	valgrind --log-file="outValgrind" --leak-check=full ./program < input
-
-valgrind2: 
-	valgrind --log-file="outValgrind" --leak-check=full ./program < input2
+	valgrind --log-file="valgrindOutput.txt" --leak-check=full ./program
