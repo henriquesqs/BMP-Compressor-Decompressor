@@ -2,7 +2,7 @@
 #define DESCOMPRESSOR_H
 
 /*
-    Function responsible to receive data to do descompress of an image.
+    Function responsible to receive data to do descompressing of an image.
 
     PARAMETERS:
         - auxY: aux variable responsible for storing where Y component ends in file;
@@ -12,7 +12,6 @@ int descompressor();
 
 double **idct(double **mat, int height, int width);
 
-// double **runlengthDescomp(double **mat, FILE *file, int height, int width, long int aux);
 void runlengthDescomp(short *vector, FILE *file);
 
 double **quantizationLuminanceDescomp(double **component, int height, int width);

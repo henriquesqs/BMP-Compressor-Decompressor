@@ -63,11 +63,13 @@ int main(int argc, char const *argv[]) {
 
         case 2: // Option 2: image descompression.
 
-            timeBefore = timeAfter = 0; // initializing values
+            timeBefore = timeAfter = 0; // Initializing values
 
-            timeBefore = clock();
+            timeBefore = clock(); // Saving time before starting image compression.
 
+            // If everything went right during descompression, calculates its duration.
             if (descompressor() > 0) {
+
                 timeAfter = clock();
                 duration = (timeAfter - timeBefore) / (double)CLOCKS_PER_SEC;
 

@@ -145,27 +145,6 @@ int **allocIntMatrix(int **mat, int rows, int cols);
 double **allocDoubleMatrix(double **mat, int rows, int cols);
 
 /*
-    Function responsible for alloc float matrices.
-
-    PARAMETERS:
-        - mat: matrix to alloc;
-        - rows: number of rows to alloc;
-        - cols: number of columns to alloc.
-    
-    RETURNS allocated matrix.
-*/
-float **allocFloatMatrix(float **mat, int rows, int cols);
-
-/*
-    Function to free a float matrix, given its rows.
-
-    PARAMETERS:
-        - mat: matrix to free;
-        - rows: number of rows to free.
-*/
-void freeFloatMatrix(float **mat, int rows);
-
-/*
     Function to free a matrix, given its rows.
 
     PARAMETERS:
@@ -173,24 +152,6 @@ void freeFloatMatrix(float **mat, int rows);
         - rows: number of rows to free.
 */
 void freeDoubleMatrix(double **mat, int rows);
-
-/*
-    Function to free a matrix, given its rows.
-
-    PARAMETERS:
-        - mat: matrix to free;
-        - rows: number of rows to free.
-*/
-void freeMatrix(unsigned char **mat, int rows);
-
-/*
-    Function to free a matrix, given its rows.
-
-    PARAMETERS:
-        - mat: matrix to free;
-        - rows: number of rows to free.
-*/
-void freeIntMatrix(int **mat, int rows);
 
 /*
     Function responsible for separate the R, G, B componentes.
@@ -246,16 +207,6 @@ long int fileSize(FILE *file);
         - file: file to store bytes in run-length;
 */
 void divideComponent(double **component, int height, int width, FILE *file);
-
-/*
-    Function responsible for printing a double **.
-
-    PARAMETERS:
-        - mat: mat to print its content;
-        - height: height of mat;
-        - width: width of mat;
-*/
-void printComponent(double **mat, int height, int width);
 
 /*
     Discrete cosine transform (DCT) is responsible for filtering high/low spatial frequencies regions.
