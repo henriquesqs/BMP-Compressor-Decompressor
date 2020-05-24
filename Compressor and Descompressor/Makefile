@@ -1,17 +1,22 @@
 all:
 	 
-	gcc -g -c main.c
-	gcc -g -c functions.c
-	gcc -g -o program.exe functions.c main.o -lm
+	gcc -Wall -c main.c -g
+	gcc -Wall -c functions.c -g
+	gcc -Wall -o program functions.c main.o -lm -g
 
 # For some reason maybe the 'make run' command will not work. Please, run manually by 
 # entering './program' command on your terminal
 run:
 
-	./program.exe
+	./program
 
 clean:
-	rm *.exe
 	rm *.o
-	rm *.bmp
 	rm *.bin
+	rm *.bmp
+
+valgrind: 
+	valgrind --log-file="outValgrind" --leak-check=full ./program < input
+
+valgrind2: 
+	valgrind --log-file="outValgrind" --leak-check=full ./program < input2
