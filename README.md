@@ -1,4 +1,4 @@
-# BMP IMAGE COMPRESSION AND DESCOMPRESSION
+# BMP IMAGE COMPRESSOR AND DESCOMPRESSOR
 This project allows you to compress and descompress a BMP image file (with some requisites of size) with <b>24 bits for colors</b>. This compressor and descompressor uses the **JPEG format** to apply compression and descompression and **uses C11 languague**.
 
 ### Image requisites
