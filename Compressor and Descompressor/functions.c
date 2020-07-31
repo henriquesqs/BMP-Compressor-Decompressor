@@ -197,9 +197,9 @@ void levelShift(double **mat, int offBits, int height, int width) {
             mat[i][j] += offBits;
 }
 
-double **dct(double **mat, int height, int width) {
+double **dct(double **mat, int height, int width, double **dctCoefs) {
 
-    double aux = 0, dctCoefs[height][width];
+    double aux = 0;
 
     // Initializinng dctCoefs
     for (int i = 0; i < height; i++)
@@ -598,9 +598,13 @@ int compress(double *compressRate) {
     moveToBitmapData(compressed, bmpFile);
 
     // Applying dct on components
-    Y = dct(Y, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cb = dct(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cr = dct(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+    double **dctCoefs = NULL;
+
+    dctCoefs = allocDoubleMatrix(dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    Y = dct(Y, getHeight(bmpInfo), getWidth(bmpInfo), dctCoefs);
+    Cb = dct(Cb, getHeight(bmpInfo), getWidth(bmpInfo), dctCoefs);
+    Cr = dct(Cr, getHeight(bmpInfo), getWidth(bmpInfo), dctCoefs);
 
     // Applying quantization on components
     quantizationLuminance(Y, getHeight(bmpInfo), getWidth(bmpInfo));
@@ -750,9 +754,9 @@ void YcbcrTorgb(unsigned char **R, unsigned char **G, unsigned char **B, double 
     }
 }
 
-double **idct(double **mat, int height, int width) {
+double **idct(double **mat, int height, int width, double **dctCoefs) {
 
-    double aux = 0, dctCoefs[height][width];
+    double aux = 0;
 
     // Initializing dctCoefs
     for (int i = 0; i < height; i++)
@@ -873,7 +877,7 @@ double **undoDivideComponent(double **component, int height, int width, FILE *co
     mat = allocDoubleMatrix(mat, 8, 8);
 
     // Initializing vector
-    for(int i = 0; i < 64; i++)
+    for (int i = 0; i < 64; i++)
         vector[i] = 0;
 
     for (int a = 0; a < ceil(height / 8); a++) {
@@ -949,9 +953,12 @@ int descompressor() {
     Cr = quantizationCrominanceDescomp(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 
     // Starting IDCT step
-    Y = idct(Y, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cb = idct(Cb, getHeight(bmpInfo), getWidth(bmpInfo));
-    Cr = idct(Cr, getHeight(bmpInfo), getWidth(bmpInfo));
+    double **dctCoefs = NULL;
+    dctCoefs = allocDoubleMatrix(dctCoefs, getHeight(bmpInfo), getWidth(bmpInfo));
+
+    Y = idct(Y, getHeight(bmpInfo), getWidth(bmpInfo), dctCoefs);
+    Cb = idct(Cb, getHeight(bmpInfo), getWidth(bmpInfo), dctCoefs);
+    Cr = idct(Cr, getHeight(bmpInfo), getWidth(bmpInfo), dctCoefs);
 
     // Applying level shift
     levelShift(Y, 128, getHeight(bmpInfo), getWidth(bmpInfo));
@@ -966,7 +973,7 @@ int descompressor() {
     G = allocMatrix(G, getHeight(bmpInfo), getWidth(bmpInfo));
     B = allocMatrix(B, getHeight(bmpInfo), getWidth(bmpInfo));
 
-    // Converting from YCbCr to RGB. We take care of values lower than 0 
+    // Converting from YCbCr to RGB. We take care of values lower than 0
     // and greater than 255 with convertion() function in YcbcrTorgb() method;
     YcbcrTorgb(R, G, B, Y, Cb, Cr, getHeight(bmpInfo), getWidth(bmpInfo));
 

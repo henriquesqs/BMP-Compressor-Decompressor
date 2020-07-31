@@ -210,7 +210,7 @@ void divideComponent(double **component, int height, int width, FILE *file);
     
     RETURNS component with its elements after applying dct.
 */
-double **dct(double **component, int height, int width);
+double **dct(double **component, int height, int width, double **dctCoefs);
 
 /*
     Function responsible for apply a level shift in a double matrix.
@@ -219,7 +219,8 @@ double **dct(double **component, int height, int width);
         - mat: matrix to apply level shift;
         - offBits: quantity of bits to shift;
         - height: height of mat;
-        - width: width of mat.
+        - width: width of mat;
+        - dctCoefs: matrix to store dct coefficients.
 
 */
 void levelShift(double **mat, int offBits, int height, int width);

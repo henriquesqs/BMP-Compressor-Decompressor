@@ -32,7 +32,7 @@ int descompressor();
 */
 unsigned char convertion(int num);
 
-double **idct(double **mat, int height, int width);
+double **idct(double **mat, int height, int width, double **dctCoefs);
 
 void runlengthDescomp(short *vector, FILE *file);
 
