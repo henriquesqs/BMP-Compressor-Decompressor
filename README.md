@@ -1,4 +1,4 @@
-# BMP IMAGE COMPRESSOR AND DESCOMPRESSOR
+# BMP IMAGE COMPRESSOR AND DECOMPRESSOR
 This project allows you to compress and decompress a BMP image file (with some requisites) with <b>24 bits for colors</b>. This compressor and decompressor uses the **JPEG format** to apply compression and decompression and **uses C11 language**.
 
 ### Image requisites
@@ -11,7 +11,7 @@ As said before, your image must accomplish this requisites listed below:
 ### Instructions
 - Install gcc;
 - Install make;
-- Place the image you want to compress/ descompress in **root folder** OR **images folder**;
+- Place the image you want to compress/ decompress in **root folder** OR **images folder**;
 - Compile the source code by entering `make all` in your terminal;
 - Run the program by entering `make run`;
 - Follow the instructions the program will show you.
