@@ -18,4 +18,4 @@ As said before, your image must accomplish this requisites listed below:
 
 ### Credits
 - Dennis L. Green ([@DennisLemkeGreen](https://github.com/DennisLemkeGreen));
-- Henrique dos Santos ([@henriquesqs](https://github.com/henriquesqs));
+- Henrique dos Santos ([@henriquesqs](https://github.com/henriquesqs)).
